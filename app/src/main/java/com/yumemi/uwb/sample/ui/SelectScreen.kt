@@ -26,7 +26,11 @@ fun SelectScreen(
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(title = { Text(text = "UWB サンプル アプリ") })
+            TopAppBar(
+                title = { Text(text = "UWB サンプル アプリ") },
+                modifier = Modifier.padding(start = 58.dp),
+            )
+
         },
     ) { innerPadding ->
         Column(
@@ -46,7 +50,11 @@ fun SelectScreen(
     }
 }
 
-@Preview
+@Preview(
+    showBackground = true,
+    widthDp = 1280,
+    heightDp = 720,
+)
 @Composable
 private fun SelectScreenPreview() {
     AndroiduwbsampleTheme {

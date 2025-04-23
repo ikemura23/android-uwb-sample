@@ -1,15 +1,23 @@
 package com.yumemi.uwb.sample.ui.components
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.yumemi.uwb.sample.ui.theme.AndroiduwbsampleTheme
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 @Composable
 fun UwbContent(
@@ -17,32 +25,51 @@ fun UwbContent(
     distance: Float?,
 ) {
     Box(
-        modifier = modifier.width(200.dp),
+        modifier = modifier
+            .fillMaxSize()
+            .padding(start = 74.dp, end = 24.dp),
     ) {
         Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxSize()
         ) {
+            // 距離
             Text(
-                text = "距離 = ",
-                modifier = Modifier.weight(1f),
+                text = "距離(m)",
+                fontSize = 60.sp,
             )
-            val distanceText = takeIf { distance != null }?.let {
-                "$distance m"
-            } ?: ""
-
+            Spacer(modifier = Modifier.padding(24.dp).weight(1f))
+            // 値
             Text(
-                text = distanceText,
+                text = distance?.let(::formatDistance) ?: "",
+                color = Color.Green,
+                fontSize = 160.sp,
             )
         }
-
     }
 }
 
-@Preview(showBackground = true)
+private fun formatDistance(distance: Float): String {
+    val normalizedDistance = if (distance < 0) 0f else distance
+    return BigDecimal(normalizedDistance.toString())
+        .setScale(1, RoundingMode.HALF_UP)
+        .toString()
+}
+
+@Preview(
+    showBackground = true,
+    widthDp = 1280,
+    heightDp = 720,
+)
 @Composable
 private fun UwbContentPreview() {
     AndroiduwbsampleTheme {
         Column {
             UwbContent(distance = 1234123.4F)
+            UwbContent(distance = 1234123.45F)
+            UwbContent(distance = 123412.44F)
+            UwbContent(distance = -1.5F)
             UwbContent(distance = null)
         }
     }

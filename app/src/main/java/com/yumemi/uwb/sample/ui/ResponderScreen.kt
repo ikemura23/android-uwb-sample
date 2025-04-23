@@ -77,19 +77,24 @@ fun ResponderScreen(modifier: Modifier = Modifier) {
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(title = { Text(text = "レスポンダー") })
+            TopAppBar(
+                title = { Text(text = "レスポンダー") },
+                modifier = Modifier.padding(start = 58.dp),
+            )
         },
     ) { innerPadding ->
         UwbContent(
-            modifier = Modifier
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp),
+            modifier = Modifier.padding(innerPadding),
             distance = uwbPosition.value?.distance?.value,
         )
     }
 }
 
-@Preview(showBackground = true)
+@Preview(
+    showBackground = true,
+    widthDp = 1280,
+    heightDp = 720,
+)
 @Composable
 fun ResponderScreenPreview() {
     AndroiduwbsampleTheme {
