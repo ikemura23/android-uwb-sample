@@ -27,7 +27,7 @@ fun UwbContent(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .padding(start = 74.dp, end = 24.dp),
+            .padding(start = 74.dp, end = 56.dp),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -44,7 +44,7 @@ fun UwbContent(
             Text(
                 text = distance?.let(::formatDistance) ?: "",
                 color = Color.Green,
-                fontSize = 160.sp,
+                fontSize = 240.sp,
             )
         }
     }
@@ -66,9 +66,9 @@ private fun formatDistance(distance: Float): String {
 private fun UwbContentPreview() {
     AndroiduwbsampleTheme {
         Column {
-            UwbContent(distance = 1234123.4F)
-            UwbContent(distance = 1234123.45F)
-            UwbContent(distance = 123412.44F)
+            UwbContent(distance = 20.4F)
+            UwbContent(distance = 100.45F)
+            UwbContent(distance = 22.44F)
             UwbContent(distance = -1.5F)
             UwbContent(distance = null)
         }
