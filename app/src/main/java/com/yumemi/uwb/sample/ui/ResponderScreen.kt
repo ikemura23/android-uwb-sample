@@ -1,5 +1,6 @@
 package com.yumemi.uwb.sample.ui
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,6 +26,7 @@ import com.yumemi.uwb.sample.oob.ble.BleCentral
 import com.yumemi.uwb.sample.ui.components.UwbContent
 import com.yumemi.uwb.sample.ui.theme.AndroiduwbsampleTheme
 import com.yumemi.uwb.sample.uwb.UwbControllerParams
+import com.yumemi.uwb.sample.uwb.logValue
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,6 +67,8 @@ fun ResponderScreen(modifier: Modifier = Modifier) {
             controleeSession.prepareSession(rangingParameters).collect { rangingResult ->
                 when (rangingResult) {
                     is RangingResult.RangingResultPosition -> {
+
+                        Log.d("UwbResponder", rangingResult.position.logValue())
                         uwbPosition.value = rangingResult.position
                     }
 
@@ -86,7 +90,9 @@ fun ResponderScreen(modifier: Modifier = Modifier) {
         },
     ) { innerPadding ->
         UwbContent(
-            modifier = Modifier.padding(innerPadding).background(color = Color.DarkGray),
+            modifier = Modifier
+                .padding(innerPadding)
+                .background(color = Color.DarkGray),
             distance = uwbPosition.value?.distance?.value,
         )
     }
