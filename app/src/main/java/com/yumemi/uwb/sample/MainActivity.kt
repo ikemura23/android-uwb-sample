@@ -10,9 +10,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.yumemi.uwb.sample.navigation.Screen
-import com.yumemi.uwb.sample.ui.ControllerScreen
-import com.yumemi.uwb.sample.ui.ResponderScreen
-import com.yumemi.uwb.sample.ui.SelectScreen
+import com.yumemi.uwb.sample.ui.controller.ControllerScreen
+import com.yumemi.uwb.sample.ui.responder.ResponderScreen
+import com.yumemi.uwb.sample.ui.home.SelectScreen
 import com.yumemi.uwb.sample.ui.theme.AndroiduwbsampleTheme
 
 class MainActivity : ComponentActivity() {

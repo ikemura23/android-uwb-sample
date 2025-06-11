@@ -1,4 +1,4 @@
-package com.yumemi.uwb.sample.ui
+package com.yumemi.uwb.sample.ui.controller
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
@@ -24,10 +24,11 @@ import com.yumemi.uwb.sample.uwb.UwbController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ControllerScreen(modifier: Modifier = Modifier) {
+fun ControllerScreen(modifier: Modifier = Modifier.Companion) {
     val context = LocalContext.current
     val uwbController = UwbController(context)
-    val uwbPosition: MutableState<RangingPosition?> = remember { mutableStateOf<RangingPosition?>(null) }
+    val uwbPosition: MutableState<RangingPosition?> =
+        remember { mutableStateOf<RangingPosition?>(null) }
 
     LaunchedEffect(Unit) {
         uwbController.startRanging()
@@ -41,16 +42,16 @@ fun ControllerScreen(modifier: Modifier = Modifier) {
         }
     }
     Scaffold(
-        modifier = modifier.background(color = Color.Gray),
+        modifier = modifier.background(color = Color.Companion.Gray),
         topBar = {
             TopAppBar(
                 title = { Text(text = "コントローラー") },
-                modifier = Modifier.padding(start = 58.dp),
+                modifier = Modifier.Companion.padding(start = 58.dp),
             )
         },
     ) { innerPadding ->
         UwbContent(
-            modifier = Modifier.padding(innerPadding),
+            modifier = Modifier.Companion.padding(innerPadding),
             distance = uwbPosition.value?.distance?.value,
         )
     }
@@ -67,4 +68,3 @@ fun ControllerScreenPreview() {
         ControllerScreen()
     }
 }
-
