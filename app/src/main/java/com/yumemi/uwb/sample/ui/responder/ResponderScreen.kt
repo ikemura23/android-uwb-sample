@@ -68,7 +68,7 @@ fun ResponderScreen(modifier: Modifier = Modifier) {
                 when (rangingResult) {
                     is RangingResult.RangingResultPosition -> {
 
-                        Log.d("UwbResponder", rangingResult.position.logValue())
+                        Log.d("UwbResponder", "device: ${rangingResult.device.address}, position: ${rangingResult.position.logValue()}")
                         uwbPosition.value = rangingResult.position
                     }
 

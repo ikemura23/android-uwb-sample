@@ -8,7 +8,6 @@ import androidx.core.uwb.RangingResult
 import androidx.core.uwb.UwbDevice
 import androidx.core.uwb.UwbManager
 import com.yumemi.uwb.sample.oob.ble.BlePeripheral
-import kotlin.random.Random
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -21,6 +20,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.random.Random
 
 class UwbController(private val context: Context) {
     private val scope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
@@ -80,7 +80,7 @@ class UwbController(private val context: Context) {
                 controllerSession.prepareSession(rangingParameters).collect { rangingResult ->
                     when (rangingResult) {
                         is RangingResult.RangingResultPosition -> {
-                            Log.d(TAG, "Position: ${rangingResult.position}")
+                            Log.d("UwbController", "device: ${rangingResult.device.address}, position: ${rangingResult.position.logValue()}")
                             _rangingPosition.emit(rangingResult.position)
                         }
 
