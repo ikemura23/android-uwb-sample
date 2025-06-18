@@ -24,11 +24,10 @@ import com.yumemi.uwb.sample.uwb.UwbController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ControllerScreen(modifier: Modifier = Modifier.Companion) {
+fun ControllerScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val uwbController = UwbController(context)
-    val uwbPosition: MutableState<RangingPosition?> =
-        remember { mutableStateOf<RangingPosition?>(null) }
+    val uwbPosition: MutableState<RangingPosition?> = remember { mutableStateOf(null) }
 
     LaunchedEffect(Unit) {
         uwbController.startRanging()
