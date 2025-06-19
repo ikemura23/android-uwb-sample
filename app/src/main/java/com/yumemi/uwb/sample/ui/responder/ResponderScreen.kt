@@ -47,7 +47,8 @@ fun ResponderScreen(modifier: Modifier = Modifier) {
         val bleCentral = BleCentral(context)
         bleCentral.connectGattServer()
         val uwbControllerParamsByteArray = bleCentral.readCharacteristic()
-        val uwbControllerParams = UwbControllerParams.decode(uwbControllerParamsByteArray)
+        val uwbControllerParams: UwbControllerParams = UwbControllerParams.decode(uwbControllerParamsByteArray)
+        Log.d("UwbResponder", "UWB Controller Params: $uwbControllerParams")
         bleCentral.writeCharacteristic(addressByteArray)
         bleCentral.destroy()
 
