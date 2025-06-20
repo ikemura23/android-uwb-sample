@@ -21,20 +21,22 @@ import androidx.core.uwb.RangingPosition
 import com.yumemi.uwb.sample.ui.components.UwbContent
 import com.yumemi.uwb.sample.ui.theme.AndroiduwbsampleTheme
 import com.yumemi.uwb.sample.uwb.UwbResponder
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ResponderScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    // controller の位置
-    val uwbPosition = remember { mutableStateOf<RangingPosition?>(null) }
     val uwbResponder = remember { UwbResponder(context) }
+    val uwbPosition = remember { mutableStateOf<RangingPosition?>(null) }
 
     LaunchedEffect(Unit) {
-        uwbResponder.rangingResult.collect { position ->
-            uwbPosition.value = position
+        launch {
+            uwbResponder.rangingResult.collect { position ->
+                uwbPosition.value = position
+            }
         }
-
+        
         try {
             uwbResponder.startRanging()
         } catch (e: Exception) {
