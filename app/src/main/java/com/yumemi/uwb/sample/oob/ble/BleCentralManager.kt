@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 
 /** BLE セントラル側のコード */
-class BleCentral(private val context: Context) {
+class BleCentralManager(private val context: Context) {
 
     /** [readCharacteristic]等で使いたいので */
     private val _bluetoothGatt = MutableStateFlow<BluetoothGatt?>(null)

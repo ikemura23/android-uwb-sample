@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.core.uwb.RangingPosition
 import androidx.core.uwb.RangingResult
 import androidx.core.uwb.UwbManager
-import com.yumemi.uwb.sample.oob.ble.BleCentral
+import com.yumemi.uwb.sample.oob.ble.BleCentralManager
 import com.yumemi.uwb.sample.oob.ble.RangingParametersFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -34,7 +34,7 @@ class UwbResponder(private val context: Context) {
             // RangingParameters を作り UWB 接続を開始する
             val rangingParameters = RangingParametersFactory(
                 addressByteArray = controleeSession.localAddress.address,
-                bleCentral = BleCentral(context),
+                bleCentralManager = BleCentralManager(context),
             ).create()
 
             rangingJob = scope.launch {

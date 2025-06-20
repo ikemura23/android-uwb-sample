@@ -11,16 +11,16 @@ import com.yumemi.uwb.sample.uwb.UwbControllerParams
  */
 class RangingParametersFactory(
     private val addressByteArray: ByteArray,
-    private val bleCentral: BleCentral,
+    private val bleCentralManager: BleCentralManager,
 ) {
     suspend fun create(): RangingParameters {
         // BLE GATT サーバーへ接続し、UWB ホストと接続に必要なパラメーターを送受信する
-        bleCentral.connectGattServer()
-        val uwbControllerParamsByteArray = bleCentral.readCharacteristic()
+        bleCentralManager.connectGattServer()
+        val uwbControllerParamsByteArray = bleCentralManager.readCharacteristic()
         val uwbControllerParams: UwbControllerParams = UwbControllerParams.decode(uwbControllerParamsByteArray)
         Log.d(TAG, "UWB Controller Params: $uwbControllerParams")
-        bleCentral.writeCharacteristic(addressByteArray)
-        bleCentral.destroy()
+        bleCentralManager.writeCharacteristic(addressByteArray)
+        bleCentralManager.destroy()
 
         return RangingParameters(
             uwbConfigType = RangingParameters.CONFIG_MULTICAST_DS_TWR,
