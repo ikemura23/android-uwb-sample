@@ -7,7 +7,7 @@ import androidx.core.uwb.RangingPosition
 import androidx.core.uwb.RangingResult
 import androidx.core.uwb.UwbDevice
 import androidx.core.uwb.UwbManager
-import com.yumemi.uwb.sample.oob.ble.BlePeripheral
+import com.yumemi.uwb.sample.oob.ble.BlePeripheralManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -52,7 +52,7 @@ class UwbController(private val context: Context) {
             Log.d(TAG, "ペリフェラルを開始")
             // BLE ペリフェラルを開始
             val peripheralJob = scope.launch {
-                BlePeripheral.startPeripheralAndAdvertising(
+                BlePeripheralManager.startPeripheralAndAdvertising(
                     context = context,
                     onCharacteristicReadRequest = { encodeHostParameter },
                     onCharacteristicWriteRequest = { controleeAddressFlow.value = it },
