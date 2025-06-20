@@ -2,13 +2,11 @@ package com.yumemi.uwb.sample.uwb
 
 import android.content.Context
 import android.util.Log
-import androidx.core.uwb.RangingParameters
 import androidx.core.uwb.RangingPosition
 import androidx.core.uwb.RangingResult
-import androidx.core.uwb.UwbComplexChannel
-import androidx.core.uwb.UwbDevice
 import androidx.core.uwb.UwbManager
 import com.yumemi.uwb.sample.oob.ble.BleCentral
+import com.yumemi.uwb.sample.oob.ble.RangingParametersFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -33,35 +31,20 @@ class UwbResponder(private val context: Context) {
             uwbManager = UwbManager.createInstance(context)
             val controleeSession = uwbManager.controleeSessionScope()
 
-            // controller に送る
-            val addressByteArray = controleeSession.localAddress.address
-
-            // BLE GATT サーバーへ接続し、UWB ホストと接続に必要なパラメーターを送受信する
-            val bleCentral = BleCentral(context)
-            bleCentral.connectGattServer()
-            val uwbControllerParamsByteArray = bleCentral.readCharacteristic()
-            val uwbControllerParams: UwbControllerParams = UwbControllerParams.decode(uwbControllerParamsByteArray)
-            Log.d(TAG, "UWB Controller Params: $uwbControllerParams")
-            bleCentral.writeCharacteristic(addressByteArray)
-            bleCentral.destroy()
-
             // RangingParameters を作り UWB 接続を開始する
-            val rangingParameters = RangingParameters(
-                uwbConfigType = RangingParameters.CONFIG_MULTICAST_DS_TWR,
-                complexChannel = UwbComplexChannel(uwbControllerParams.channel, uwbControllerParams.preambleIndex),
-                peerDevices = listOf(UwbDevice.createForAddress(uwbControllerParams.address)),
-                updateRateType = RangingParameters.RANGING_UPDATE_RATE_AUTOMATIC,
-                sessionId = uwbControllerParams.sessionId,
-                sessionKeyInfo = uwbControllerParams.sessionKeyInfo,
-                subSessionId = 0, // SESSION_ID_UNSET ？
-                subSessionKeyInfo = null, // ？
-            )
+            val rangingParameters = RangingParametersFactory(
+                addressByteArray = controleeSession.localAddress.address,
+                bleCentral = BleCentral(context),
+            ).create()
 
             rangingJob = scope.launch {
                 controleeSession.prepareSession(rangingParameters).collect { rangingResult ->
                     when (rangingResult) {
                         is RangingResult.RangingResultPosition -> {
-                            Log.d(TAG, "device: ${rangingResult.device.address}, position: ${rangingResult.position.logValue()}")
+                            Log.d(
+                                TAG,
+                                "device: ${rangingResult.device.address}, position: ${rangingResult.position.logValue()}"
+                            )
                             _rangingResult.emit(rangingResult.position)
                         }
 

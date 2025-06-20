@@ -68,12 +68,6 @@ class BleCentralConnector(private val context: Context) {
                     super.onCharacteristicRead(gatt, characteristic, value, status)
                     _characteristicReadChannel.trySend(value)
                 }
-
-                // Android 12 ？以前はこっちを実装する必要あり
-                override fun onCharacteristicRead(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
-                    super.onCharacteristicRead(gatt, characteristic, status)
-                    _characteristicReadChannel.trySend(characteristic?.value ?: byteArrayOf())
-                }
             },
         )
     }
