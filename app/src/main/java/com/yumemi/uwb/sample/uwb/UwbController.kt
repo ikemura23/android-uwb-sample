@@ -61,13 +61,15 @@ class UwbController(private val context: Context) {
             Log.d(TAG, "アドレスが送られてくるまで待機")
             // アドレスが送られてくるまで待機
             val controleeAddress = controleeAddressFlow.filterNotNull().first()
+            val uwbDevice: UwbDevice = UwbDevice.createForAddress(controleeAddress)
+            Log.d(TAG, "uwbDevice.address: ${uwbDevice.address}")
             peripheralJob.cancel()
 
             Log.d(TAG, "RangingParameters 作成")
             val rangingParameters = RangingParameters(
                 uwbConfigType = RangingParameters.CONFIG_MULTICAST_DS_TWR,
                 complexChannel = controllerSession.uwbComplexChannel,
-                peerDevices = listOf(UwbDevice.createForAddress(controleeAddress)),
+                peerDevices = listOf(uwbDevice),
                 updateRateType = RangingParameters.RANGING_UPDATE_RATE_AUTOMATIC,
                 sessionId = sessionId,
                 sessionKeyInfo = sessionKeyInfo,
