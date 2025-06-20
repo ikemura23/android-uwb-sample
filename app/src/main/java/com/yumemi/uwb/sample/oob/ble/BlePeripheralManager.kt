@@ -18,7 +18,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 /** BLE ペリフェラル側のコード */
-object BlePeripheral {
+object BlePeripheralManager {
 
     /**
      * ペリフェラル側に必要な GATT サーバーとアドバタイジングを開始する。
