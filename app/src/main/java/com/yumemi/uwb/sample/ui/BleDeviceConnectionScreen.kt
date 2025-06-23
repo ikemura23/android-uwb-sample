@@ -1,6 +1,5 @@
 package com.yumemi.uwb.sample.ui
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,52 +30,66 @@ fun BleDeviceConnectionScreen(
         Row(
             modifier = Modifier.weight(1f),
         ) {
-            BleDeviceItem(Modifier.weight(1f))
+            BleDeviceItem(
+                modifier = Modifier.weight(1f),
+                deviceName = "デバイス1",
+                uuId = "1234-5678-9012-3456",
+                state = "未接続",
+            )
             Spacer(Modifier.size(16.dp))
-            BleDeviceItem(Modifier.weight(1f))
+            BleDeviceItem(
+                deviceName = "デバイス2",
+                uuId = "2345-6789-0123-4567",
+                modifier = Modifier.weight(1f),
+                state = "未接続",
+            )
         }
 
         // 下に2つのBleDeviceItemを配置
         Row(
-            modifier = Modifier.fillMaxWidth().weight(1f),
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
         ) {
-            BleDeviceItem(Modifier.weight(1f))
+            BleDeviceItem(
+                deviceName = "デバイス3",
+                uuId = "3456-7890-1234-5678",
+                modifier = Modifier.weight(1f),
+                state = "未接続",
+            )
             Spacer(Modifier.size(16.dp))
-            BleDeviceItem(Modifier.weight(1f))
+            BleDeviceItem(
+                deviceName = "デバイス4",
+                uuId = "4567-8901-2345-6789",
+                modifier = Modifier.weight(1f),
+                state = "未接続",
+            )
         }
     }
 }
 
 @Composable
-fun BleDeviceItem(modifier: Modifier = Modifier) {
+fun BleDeviceItem(
+    deviceName: String,
+    uuId: String,
+    modifier: Modifier = Modifier,
+    state: String,
+) {
     Column(
         modifier = modifier,
     ) {
-        Text("デバイス1", color = Color.White)
+        Text(deviceName, color = Color.White)
+        Spacer(Modifier.size(16.dp))
+        Text(uuId, color = Color.White)
         Spacer(Modifier.size(16.dp))
         Button(
             modifier = Modifier.fillMaxWidth(),
             onClick = {
-
             },
         ) {
-            Text("デバイス1", color = Color.White)
+            Text(state, color = Color.White)
         }
     }
-
-    // Box(
-    //     modifier = modifier
-    //         .fillMaxSize()
-    //         .background(color = Color(0xFF777777))
-    //         .clickable {
-    //             // TODO: Handle click event for BLE device item
-    //         },
-    // ) {
-    //     Column {
-    //         Text("デバイス1", color = Color.White)
-    //         Text("デバイス2", color = Color.White)
-    //     }
-    // }
 }
 
 @Preview(device = "spec:width=720dp,height=360dp")
@@ -92,6 +104,10 @@ private fun BleDeviceConnectionScreenLandscapePreview() {
 @Composable
 private fun BleDeviceItemPreview() {
     AndroiduwbsampleTheme {
-        BleDeviceItem()
+        BleDeviceItem(
+            deviceName = "デバイス名",
+            uuId = "1234-5678-9012-3456",
+            state = "未接続",
+        )
     }
 }
