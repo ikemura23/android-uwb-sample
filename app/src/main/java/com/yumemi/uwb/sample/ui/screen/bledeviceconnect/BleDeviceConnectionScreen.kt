@@ -1,4 +1,4 @@
-package com.yumemi.uwb.sample.ui
+package com.yumemi.uwb.sample.ui.screen.bledeviceconnect
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
