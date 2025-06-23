@@ -13,6 +13,8 @@ import com.yumemi.uwb.sample.navigation.Screen
 import com.yumemi.uwb.sample.ui.controller.ControllerScreen
 import com.yumemi.uwb.sample.ui.responder.ResponderScreen
 import com.yumemi.uwb.sample.ui.home.SelectScreen
+import com.yumemi.uwb.sample.ui.screen.peripheral.PeripheralScreen
+import com.yumemi.uwb.sample.ui.screen.bledeviceconnect.BleDeviceConnectionScreen
 import com.yumemi.uwb.sample.ui.theme.AndroiduwbsampleTheme
 
 class MainActivity : ComponentActivity() {
@@ -47,6 +49,12 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         }
         composable(Screen.Responder.route) {
             ResponderScreen()
+        }
+        composable(Screen.Peripheral.route) {
+            PeripheralScreen()
+        }
+        composable(Screen.BleDeviceConnection.route) {
+            BleDeviceConnectionScreen()
         }
     }
 }
