@@ -38,8 +38,8 @@ fun AppNavigation(modifier: Modifier = Modifier) {
     ) {
         composable(Screen.Select.route) {
             SelectScreen(
-                onControllerClick = { navController.navigate(Screen.Controller.route) },
-                onResponderClick = { navController.navigate(Screen.Responder.route) },
+                onControllerClick = { navController.navigate(Screen.BleDeviceConnection.route) },
+                onResponderClick = { navController.navigate(Screen.Peripheral.route) },
             )
         }
         composable(Screen.Controller.route) {
