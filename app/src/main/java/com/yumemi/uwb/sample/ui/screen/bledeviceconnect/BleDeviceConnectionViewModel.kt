@@ -2,6 +2,7 @@ package com.yumemi.uwb.sample.ui.screen.bledeviceconnect
 
 import android.content.Context
 import android.util.Log
+import androidx.core.uwb.RangingParameters
 import androidx.core.uwb.UwbManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,20 +11,21 @@ import com.yumemi.uwb.sample.oob.ble.RangingParametersFactory
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
 
 data class BleDevice(
     val id: String,
     val name: String,
-    val uuid: String,
-    val isConnected: Boolean = false,
+    val isLoading: Boolean = false,
+    val isBleConnected: Boolean = false,
+    val isUwbConnected: Boolean = false,
+    val rangingParameters: RangingParameters? = null,
 )
 
 data class BleDeviceConnectionUiState(
-    val devices: List<BleDevice> = emptyList(),
-    val isLoading: Boolean = false,
-    val errorMessage: String? = null,
+    val devices: Map<String, BleDevice> = emptyMap(),
 )
 
 class BleDeviceConnectionViewModel : ViewModel() {
@@ -31,138 +33,59 @@ class BleDeviceConnectionViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(BleDeviceConnectionUiState())
     val uiState: StateFlow<BleDeviceConnectionUiState> = _uiState.asStateFlow()
 
+    private val deviceNames = mapOf(
+        DeviceUuid.GREEN to "デバイス1",
+        DeviceUuid.RED to "デバイス2",
+        DeviceUuid.YELLOW to "デバイス3",
+        DeviceUuid.BROWN to "デバイス4"
+    )
+
     init {
-        loadInitialDevices()
-    }
-
-    private fun loadInitialDevices() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                isLoading = true,
-            )
-
-            // 初期デバイスリストを作成
-            val initialDevices = listOf(
-                BleDevice(
-                    id = "device1",
-                    name = "緑",
-                    uuid = "50f6971d-9875-33c7-b231-8e2f99bdb811",
-                ),
-                BleDevice(
-                    id = "device2",
-                    name = "赤",
-                    uuid = "27cd139d-5b54-38d6-9999-089e17cf9c23",
-                ),
-                BleDevice(
-                    id = "device3",
-                    name = "黄",
-                    uuid = "4247b308-be67-39a6-bd26-00e4d8f469cf",
-                ),
-                BleDevice(
-                    id = "device4",
-                    name = "茶",
-                    uuid = "692ffa86-df4c-317d-8532-4f3f2deb1dba",
-                ),
-            )
-
-            _uiState.value = _uiState.value.copy(
-                devices = initialDevices,
-                isLoading = false,
-            )
+        val initialDevices = DeviceUuid.ALL.associateWith { uuid ->
+            BleDevice(id = uuid, name = deviceNames[uuid] ?: "Unknown Device")
         }
+        _uiState.value = BleDeviceConnectionUiState(devices = initialDevices)
     }
-    //
-    // fun onDeviceClick(deviceId: String) {
-    //     viewModelScope.launch {
-    //         val currentDevices = _uiState.value.devices.toMutableList()
-    //         val deviceIndex = currentDevices.indexOfFirst { it.id == deviceId }
-    //
-    //         if (deviceIndex != -1) {
-    //             val device = currentDevices[deviceIndex]
-    //             val updatedDevice = device.copy(isConnected = !device.isConnected)
-    //             currentDevices[deviceIndex] = updatedDevice
-    //
-    //             _uiState.value = _uiState.value.copy(
-    //                 devices = currentDevices,
-    //             )
-    //         }
-    //     }
-    // }
 
-    fun connectToDevice(deviceId: String) {
+    fun onDeviceClick(context: Context, deviceId: String) {
+        _uiState.update { currentState ->
+            val updatedDevice = currentState.devices[deviceId]?.copy(isLoading = true)
+            if (updatedDevice != null) {
+                currentState.copy(devices = currentState.devices + (deviceId to updatedDevice))
+            } else {
+                currentState
+            }
+        }
+
         viewModelScope.launch {
-            // ここで実際のBLE接続処理を実装
-            // 現在は状態の切り替えのみ
+            val rangingParameters = try {
+                RangingParametersFactory(
+                    addressByteArray = UwbManager.createInstance(context).controleeSessionScope().localAddress.address,
+                    bleCentralManager = BleCentralManager(context, UUID.fromString(deviceId)),
+                ).create()
+            } catch (e: Exception) {
+                Log.e("BleDeviceConnectionViewModel", "Failed to get ranging parameters for $deviceId", e)
+                null
+            }
+
+            _uiState.update { currentState ->
+                val deviceToUpdate = currentState.devices[deviceId]
+                if (deviceToUpdate != null) {
+                    val updatedDevice = deviceToUpdate.copy(
+                        isLoading = false,
+                        isBleConnected = rangingParameters != null,
+                        rangingParameters = rangingParameters
+                    )
+                    currentState.copy(devices = currentState.devices + (deviceId to updatedDevice))
+                } else {
+                    currentState
+                }
+            }
         }
     }
 
-    fun disconnectFromDevice(deviceId: String) {
-        viewModelScope.launch {
-            // ここで実際のBLE切断処理を実装
-            // 現在は状態の切り替えのみ
-        }
-    }
+    fun startRanging() {
 
-    /**
-     * デバイス 1 クリックイベントハンドラー
-     */
-    fun onDevice1Click(context: Context) {
-        viewModelScope.launch {
-            val rangingParameters = RangingParametersFactory(
-                addressByteArray = UwbManager.createInstance(context).controleeSessionScope().localAddress.address,
-                bleCentralManager = BleCentralManager(context, UUID.fromString(DeviceUuid.GREEN)),
-            ).create()
-            // rangingParameters が取得できればOK
-            Log.d("BleDeviceConnectionViewModel", "Ranging Parameters for Device 1 GREEN: $rangingParameters")
-        }
-    }
-
-    /**
-     * デバイス 2 クリックイベントハンドラー
-     */
-    fun onDevice2Click(context: Context) {
-        viewModelScope.launch {
-            val rangingParameters = RangingParametersFactory(
-                addressByteArray = UwbManager.createInstance(context).controleeSessionScope().localAddress.address,
-                bleCentralManager = BleCentralManager(
-                    context,
-                    UUID.fromString(DeviceUuid.YELLOW),
-                ),
-            ).create()
-            // rangingParameters が取得できればOK
-            Log.d("BleDeviceConnectionViewModel", "Ranging Parameters for Device 2 RED: $rangingParameters")
-        }
-    }
-
-    /**
-     * デバイス 3 クリックイベントハンドラー
-     */
-    fun onDevice3Click(context: Context) {
-        viewModelScope.launch {
-            val rangingParameters = RangingParametersFactory(
-                addressByteArray = UwbManager.createInstance(context).controleeSessionScope().localAddress.address,
-                bleCentralManager = BleCentralManager(
-                    context,
-                    UUID.fromString(DeviceUuid.RED),
-                ),
-            ).create()
-            // rangingParameters が取得できればOK
-            Log.d("BleDeviceConnectionViewModel", "Ranging Parameters for Device 3 YELLOW: $rangingParameters")
-        }
-    }
-
-    /**
-     * デバイス 4 クリックイベントハンドラー
-     */
-    fun onDevice4Click(context: Context) {
-        viewModelScope.launch {
-            val rangingParameters = RangingParametersFactory(
-                addressByteArray = UwbManager.createInstance(context).controleeSessionScope().localAddress.address,
-                bleCentralManager = BleCentralManager(context, UUID.fromString(DeviceUuid.BROWN)),
-            ).create()
-            // rangingParameters が取得できればOK
-            Log.d("BleDeviceConnectionViewModel", "Ranging Parameters for Device 4 BROWN: $rangingParameters")
-        }
     }
 }
 
@@ -174,4 +97,5 @@ object DeviceUuid {
     const val RED = "27cd139d-5b54-38d6-9999-089e17cf9c23"
     const val YELLOW = "4247b308-be67-39a6-bd26-00e4d8f469cf"
     const val BROWN = "692ffa86-df4c-317d-8532-4f3f2deb1dba"
+    val ALL = listOf(GREEN, RED, YELLOW, BROWN)
 }
