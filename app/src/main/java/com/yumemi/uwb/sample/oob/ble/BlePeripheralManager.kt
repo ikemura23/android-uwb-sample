@@ -16,6 +16,7 @@ import android.os.ParcelUuid
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 /** BLE ペリフェラル側のコード */
 object BlePeripheralManager {
@@ -89,8 +90,9 @@ object BlePeripheralManager {
             },
         )
 
+        val deviceUuid: UUID = BleUuidProvider.getServiceUuid(context)
         // サービスとキャラクタリスティックを作る
-        val gattService = BluetoothGattService(BleUuid.GATT_SERVICE_UUID, BluetoothGattService.SERVICE_TYPE_PRIMARY)
+        val gattService = BluetoothGattService(deviceUuid, BluetoothGattService.SERVICE_TYPE_PRIMARY)
         val gattCharacteristics = BluetoothGattCharacteristic(
             BleUuid.GATT_CHARACTERISTIC_UUID,
             BluetoothGattCharacteristic.PROPERTY_READ or BluetoothGattCharacteristic.PROPERTY_WRITE,
@@ -119,8 +121,9 @@ object BlePeripheralManager {
             setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_POWER)
             setTimeout(0)
         }.build()
+        val deviceUuid: UUID = BleUuidProvider.getServiceUuid(context)
         val advertiseData = AdvertiseData.Builder().apply {
-            addServiceUuid(ParcelUuid(BleUuid.GATT_SERVICE_UUID))
+            addServiceUuid(ParcelUuid(deviceUuid))
         }.build()
         // アドバタイジング開始
         val advertiseCallback = object : AdvertiseCallback() {

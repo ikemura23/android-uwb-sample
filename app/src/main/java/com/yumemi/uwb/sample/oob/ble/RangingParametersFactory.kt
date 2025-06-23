@@ -13,11 +13,10 @@ import java.util.UUID
 class RangingParametersFactory(
     private val addressByteArray: ByteArray,
     private val bleCentralManager: BleCentralManager,
-    private val uuid: UUID
 ) {
     suspend fun create(): RangingParameters {
         // BLE GATT サーバーへ接続し、UWB ホストと接続に必要なパラメーターを送受信する
-        bleCentralManager.connectGattServer(uuid)
+        bleCentralManager.connectGattServer()
         val uwbControllerParamsByteArray = bleCentralManager.readCharacteristic()
         val uwbControllerParams: UwbControllerParams = UwbControllerParams.decode(uwbControllerParamsByteArray)
         Log.d(TAG, "UWB Controller Params: $uwbControllerParams")

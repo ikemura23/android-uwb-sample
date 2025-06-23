@@ -13,6 +13,7 @@ import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.os.ParcelUuid
+import android.util.Log
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -24,6 +25,7 @@ import kotlin.coroutines.suspendCoroutine
 /** BLE セントラル側のコード */
 class BleCentralManager(
     private val context: Context,
+    private val uuid: UUID,
 ) {
 
     /** [readCharacteristic]等で使いたいので */
@@ -34,7 +36,8 @@ class BleCentralManager(
 
     /** BLE 通信をし、GATT サーバーへ接続しサービスを探す */
     @SuppressLint("MissingPermission")
-    suspend fun connectGattServer(uuid: UUID) {
+    suspend fun connectGattServer() {
+        Log.d(TAG, "connectGattServer uuid: $uuid")
         val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
 
         // BluetoothDevice が見つかるまで一時停止
@@ -43,6 +46,7 @@ class BleCentralManager(
             val bleScanCallback = object : ScanCallback() {
                 override fun onScanResult(callbackType: Int, result: ScanResult?) {
                     super.onScanResult(callbackType, result)
+                    Log.d(TAG, "onScanResult result: $result")
                     // 見つけたら返して、スキャンも終了させる
                     continuation.resume(result?.device)
                     bluetoothLeScanner.stopScan(this)
@@ -50,14 +54,17 @@ class BleCentralManager(
 
                 override fun onScanFailed(errorCode: Int) {
                     super.onScanFailed(errorCode)
+                    Log.d(TAG, "onScanFailed errorCode: $errorCode")
                     continuation.resume(null)
                 }
             }
 
             // GATT サーバーのサービス UUID を指定して検索を始める
+            Log.d(TAG, "GATT サーバーのサービス UUID を指定して検索を始める")
             val scanFilter = ScanFilter.Builder().apply {
                 setServiceUuid(ParcelUuid(uuid))
             }.build()
+            Log.d(TAG, "startScan")
             bluetoothLeScanner.startScan(
                 listOf(scanFilter),
                 ScanSettings.Builder().build(),
@@ -73,6 +80,7 @@ class BleCentralManager(
                 // ペリフェラル側との接続
                 override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
                     super.onConnectionStateChange(gatt, status, newState)
+                    Log.d(TAG, "ペリフェラル側との接続 onConnectionStateChange newState: $newState, status: $status")
                     when (newState) {
                         // 接続できたらサービスを探す
                         BluetoothProfile.STATE_CONNECTED -> gatt?.discoverServices()
@@ -87,18 +95,21 @@ class BleCentralManager(
                     // サービスとキャラクタリスティックを探して、read する
                     // キャラクタリスティック操作ができたら flow に入れる
                     _bluetoothGatt.value = gatt
+                    Log.d(TAG, "onServicesDiscovered gatt: $gatt, status: $status")
                 }
 
                 // onCharacteristicReadRequest で送られてきたデータを受け取る
                 override fun onCharacteristicRead(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, value: ByteArray, status: Int) {
                     super.onCharacteristicRead(gatt, characteristic, value, status)
                     _characteristicReadChannel.trySend(value)
+                    Log.d(TAG, "onCharacteristicReadRequest で送られてきたデータを受け取る onCharacteristicRead gatt: $gatt, status: $status")
                 }
             },
         )
 
         // GATT サーバーへ接続できるまで一時停止する
         _bluetoothGatt.first { it != null }
+        Log.d(TAG, "GATT サーバーへ接続できるまで一時停止する")
     }
 
     /** 終了時に呼ぶ */
@@ -114,7 +125,7 @@ class BleCentralManager(
         // GATT サーバーとの接続を待つ
         val gatt = _bluetoothGatt.filterNotNull().first()
         // GATT サーバーへ狙ったサービス内にあるキャラクタリスティックへ read を試みる
-        val findService = gatt.services?.first { it.uuid == BleUuid.GATT_SERVICE_UUID }
+        val findService = gatt.services?.first { it.uuid == uuid }
         val findCharacteristic = findService?.characteristics?.first { it.uuid == BleUuid.GATT_CHARACTERISTIC_UUID }
         // 結果は onCharacteristicRead で
         gatt.readCharacteristic(findCharacteristic)
@@ -127,9 +138,13 @@ class BleCentralManager(
         // GATT サーバーとの接続を待つ
         val gatt = _bluetoothGatt.filterNotNull().first()
         // GATT サーバーへ狙ったサービス内にあるキャラクタリスティックへ write を試みる
-        val findService = gatt.services?.first { it.uuid == BleUuid.GATT_SERVICE_UUID } ?: return
+        val findService = gatt.services?.first { it.uuid == uuid } ?: return
         val findCharacteristic = findService.characteristics?.first { it.uuid == BleUuid.GATT_CHARACTERISTIC_UUID } ?: return
         // 結果は onCharacteristicWriteRequest で
         gatt.writeCharacteristic(findCharacteristic, sendData, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+    }
+
+    companion object {
+        private const val TAG = "BleCentralManager"
     }
 }

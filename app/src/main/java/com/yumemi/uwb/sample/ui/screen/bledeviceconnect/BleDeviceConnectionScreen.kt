@@ -155,7 +155,7 @@ private val previewDevices = listOf(
     ),
 )
 
-@Preview(device = "spec:width=720dp,height=360dp")
+@Preview(showBackground = true, device = "spec:width=720dp,height=360dp")
 @Composable
 private fun BleDeviceConnectionScreenLandscapePreview() {
     AndroiduwbsampleTheme {

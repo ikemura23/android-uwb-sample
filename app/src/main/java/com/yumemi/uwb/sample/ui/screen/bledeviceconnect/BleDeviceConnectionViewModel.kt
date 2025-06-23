@@ -45,23 +45,23 @@ class BleDeviceConnectionViewModel : ViewModel() {
             val initialDevices = listOf(
                 BleDevice(
                     id = "device1",
-                    name = "デバイス1",
-                    uuid = "1234-5678-9012-3456",
+                    name = "緑",
+                    uuid = "50f6971d-9875-33c7-b231-8e2f99bdb811",
                 ),
                 BleDevice(
                     id = "device2",
-                    name = "デバイス2",
-                    uuid = "2345-6789-0123-4567",
+                    name = "赤",
+                    uuid = "27cd139d-5b54-38d6-9999-089e17cf9c23",
                 ),
                 BleDevice(
                     id = "device3",
-                    name = "デバイス3",
-                    uuid = "3456-7890-1234-5678",
+                    name = "黄",
+                    uuid = "4247b308-be67-39a6-bd26-00e4d8f469cf",
                 ),
                 BleDevice(
                     id = "device4",
-                    name = "デバイス4",
-                    uuid = "4567-8901-2345-6789",
+                    name = "茶",
+                    uuid = "692ffa86-df4c-317d-8532-4f3f2deb1dba",
                 ),
             )
 
@@ -110,8 +110,7 @@ class BleDeviceConnectionViewModel : ViewModel() {
         viewModelScope.launch {
             val rangingParameters = RangingParametersFactory(
                 addressByteArray = UwbManager.createInstance(context).controleeSessionScope().localAddress.address,
-                bleCentralManager = BleCentralManager(context),
-                uuid = UUID.fromString(DeviceUuid.GREEN),
+                bleCentralManager = BleCentralManager(context, UUID.fromString(DeviceUuid.GREEN)),
             ).create()
             // rangingParameters が取得できればOK
             Log.d("BleDeviceConnectionViewModel", "Ranging Parameters for Device 1 GREEN: $rangingParameters")
@@ -125,8 +124,10 @@ class BleDeviceConnectionViewModel : ViewModel() {
         viewModelScope.launch {
             val rangingParameters = RangingParametersFactory(
                 addressByteArray = UwbManager.createInstance(context).controleeSessionScope().localAddress.address,
-                bleCentralManager = BleCentralManager(context),
-                uuid = UUID.fromString(DeviceUuid.RED),
+                bleCentralManager = BleCentralManager(
+                    context,
+                    UUID.fromString(DeviceUuid.YELLOW),
+                ),
             ).create()
             // rangingParameters が取得できればOK
             Log.d("BleDeviceConnectionViewModel", "Ranging Parameters for Device 2 RED: $rangingParameters")
@@ -140,8 +141,10 @@ class BleDeviceConnectionViewModel : ViewModel() {
         viewModelScope.launch {
             val rangingParameters = RangingParametersFactory(
                 addressByteArray = UwbManager.createInstance(context).controleeSessionScope().localAddress.address,
-                bleCentralManager = BleCentralManager(context),
-                uuid = UUID.fromString(DeviceUuid.YELLOW),
+                bleCentralManager = BleCentralManager(
+                    context,
+                    UUID.fromString(DeviceUuid.RED),
+                ),
             ).create()
             // rangingParameters が取得できればOK
             Log.d("BleDeviceConnectionViewModel", "Ranging Parameters for Device 3 YELLOW: $rangingParameters")
@@ -155,8 +158,7 @@ class BleDeviceConnectionViewModel : ViewModel() {
         viewModelScope.launch {
             val rangingParameters = RangingParametersFactory(
                 addressByteArray = UwbManager.createInstance(context).controleeSessionScope().localAddress.address,
-                bleCentralManager = BleCentralManager(context),
-                uuid = UUID.fromString(DeviceUuid.BROWN),
+                bleCentralManager = BleCentralManager(context, UUID.fromString(DeviceUuid.BROWN)),
             ).create()
             // rangingParameters が取得できればOK
             Log.d("BleDeviceConnectionViewModel", "Ranging Parameters for Device 4 BROWN: $rangingParameters")

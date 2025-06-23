@@ -6,6 +6,7 @@ import androidx.core.uwb.RangingPosition
 import androidx.core.uwb.RangingResult
 import androidx.core.uwb.UwbManager
 import com.yumemi.uwb.sample.oob.ble.BleCentralManager
+import com.yumemi.uwb.sample.oob.ble.BleUuidProvider
 import com.yumemi.uwb.sample.oob.ble.RangingParametersFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -16,7 +17,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.UUID
 
 class UwbResponder(private val context: Context) {
     private val scope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
@@ -31,12 +31,12 @@ class UwbResponder(private val context: Context) {
         withContext(Dispatchers.Main.immediate) {
             uwbManager = UwbManager.createInstance(context)
             val controleeSession = uwbManager.controleeSessionScope()
+            val uuid = BleUuidProvider.getServiceUuid(context)
 
             // RangingParameters を作り UWB 接続を開始する
             val rangingParameters = RangingParametersFactory(
                 addressByteArray = controleeSession.localAddress.address,
-                bleCentralManager = BleCentralManager(context),
-                uuid = UUID.fromString("BleUuid.GATT_SERVICE_UUID"),
+                bleCentralManager = BleCentralManager(context, uuid),
             ).create()
 
             rangingJob = scope.launch {
