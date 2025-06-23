@@ -10,38 +10,49 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.yumemi.uwb.sample.ui.theme.AndroiduwbsampleTheme
 
+/**
+ * BLEデバイス接続画面 セントラル：親機
+ */
 @Composable
 fun BleDeviceConnectionScreen(
     modifier: Modifier = Modifier,
-    onDeviceClick: (String) -> Unit = {},
+    viewModel: BleDeviceConnectionViewModel = viewModel(),
 ) {
+    val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsState()
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp),
     ) {
+        // デバイスリスト表示
+        val devices = uiState.devices
+
         // 上に2つのBleDeviceItemを配置
         Row(
             modifier = Modifier.weight(1f),
         ) {
             BleDeviceItem(
                 modifier = Modifier.weight(1f),
-                deviceName = "デバイス1",
-                uuId = "1234-5678-9012-3456",
-                state = "未接続",
+                device = devices.getOrNull(0) ?: BleDevice("", "", ""),
+                onClick = { viewModel.onDevice1Click(context) },
             )
             Spacer(Modifier.size(16.dp))
             BleDeviceItem(
-                deviceName = "デバイス2",
-                uuId = "2345-6789-0123-4567",
+                device = devices.getOrNull(1) ?: BleDevice("", "", ""),
                 modifier = Modifier.weight(1f),
-                state = "未接続",
+                onClick = { viewModel.onDevice2Click(context) },
             )
         }
 
@@ -52,17 +63,25 @@ fun BleDeviceConnectionScreen(
                 .weight(1f),
         ) {
             BleDeviceItem(
-                deviceName = "デバイス3",
-                uuId = "3456-7890-1234-5678",
+                device = devices.getOrNull(2) ?: BleDevice("", "", ""),
                 modifier = Modifier.weight(1f),
-                state = "未接続",
+                onClick = { viewModel.onDevice3Click(context) },
             )
             Spacer(Modifier.size(16.dp))
             BleDeviceItem(
-                deviceName = "デバイス4",
-                uuId = "4567-8901-2345-6789",
+                device = devices.getOrNull(3) ?: BleDevice("", "", ""),
                 modifier = Modifier.weight(1f),
-                state = "未接続",
+                onClick = { viewModel.onDevice4Click(context) },
+            )
+        }
+
+        // エラーメッセージ表示
+        uiState.errorMessage?.let { errorMessage ->
+            Spacer(Modifier.size(16.dp))
+            Text(
+                text = errorMessage,
+                color = Color.Red,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
@@ -70,27 +89,56 @@ fun BleDeviceConnectionScreen(
 
 @Composable
 fun BleDeviceItem(
-    deviceName: String,
-    uuId: String,
+    device: BleDevice,
     modifier: Modifier = Modifier,
-    state: String,
+    onClick: () -> Unit = {},
 ) {
     Column(
         modifier = modifier,
     ) {
-        Text(deviceName, color = Color.White)
+        Text(device.name, color = Color.White)
         Spacer(Modifier.size(16.dp))
-        Text(uuId, color = Color.White)
+        Text(device.uuid, color = Color.White)
         Spacer(Modifier.size(16.dp))
         Button(
             modifier = Modifier.fillMaxWidth(),
-            onClick = {
-            },
+            onClick = onClick,
         ) {
-            Text(state, color = Color.White)
+            Text(
+                if (device.isConnected) "切断" else "接続",
+                color = Color.White,
+            )
         }
     }
 }
+
+// プレビュー用のダミーデータ
+private val previewDevices = listOf(
+    BleDevice(
+        id = "device1",
+        name = "デバイス1",
+        uuid = "1234-5678-9012-3456",
+        isConnected = false,
+    ),
+    BleDevice(
+        id = "device2",
+        name = "デバイス2",
+        uuid = "2345-6789-0123-4567",
+        isConnected = true,
+    ),
+    BleDevice(
+        id = "device3",
+        name = "デバイス3",
+        uuid = "3456-7890-1234-5678",
+        isConnected = false,
+    ),
+    BleDevice(
+        id = "device4",
+        name = "デバイス4",
+        uuid = "4567-8901-2345-6789",
+        isConnected = false,
+    ),
+)
 
 @Preview(device = "spec:width=720dp,height=360dp")
 @Composable
@@ -105,9 +153,7 @@ private fun BleDeviceConnectionScreenLandscapePreview() {
 private fun BleDeviceItemPreview() {
     AndroiduwbsampleTheme {
         BleDeviceItem(
-            deviceName = "デバイス名",
-            uuId = "1234-5678-9012-3456",
-            state = "未接続",
+            device = previewDevices[0],
         )
     }
 }

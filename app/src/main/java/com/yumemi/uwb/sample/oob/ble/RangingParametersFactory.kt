@@ -5,6 +5,7 @@ import androidx.core.uwb.RangingParameters
 import androidx.core.uwb.UwbComplexChannel
 import androidx.core.uwb.UwbDevice
 import com.yumemi.uwb.sample.uwb.UwbControllerParams
+import java.util.UUID
 
 /**
  * UWB ホスト（親）と接続するためのパラメーターを作成するファクトリー
@@ -12,10 +13,11 @@ import com.yumemi.uwb.sample.uwb.UwbControllerParams
 class RangingParametersFactory(
     private val addressByteArray: ByteArray,
     private val bleCentralManager: BleCentralManager,
+    private val uuid: UUID
 ) {
     suspend fun create(): RangingParameters {
         // BLE GATT サーバーへ接続し、UWB ホストと接続に必要なパラメーターを送受信する
-        bleCentralManager.connectGattServer()
+        bleCentralManager.connectGattServer(uuid)
         val uwbControllerParamsByteArray = bleCentralManager.readCharacteristic()
         val uwbControllerParams: UwbControllerParams = UwbControllerParams.decode(uwbControllerParamsByteArray)
         Log.d(TAG, "UWB Controller Params: $uwbControllerParams")

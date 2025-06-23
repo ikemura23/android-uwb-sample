@@ -13,15 +13,18 @@ import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.os.ParcelUuid
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import java.util.UUID
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 /** BLE セントラル側のコード */
-class BleCentralManager(private val context: Context) {
+class BleCentralManager(
+    private val context: Context,
+) {
 
     /** [readCharacteristic]等で使いたいので */
     private val _bluetoothGatt = MutableStateFlow<BluetoothGatt?>(null)
@@ -31,7 +34,7 @@ class BleCentralManager(private val context: Context) {
 
     /** BLE 通信をし、GATT サーバーへ接続しサービスを探す */
     @SuppressLint("MissingPermission")
-    suspend fun connectGattServer() {
+    suspend fun connectGattServer(uuid: UUID) {
         val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
 
         // BluetoothDevice が見つかるまで一時停止
@@ -53,7 +56,7 @@ class BleCentralManager(private val context: Context) {
 
             // GATT サーバーのサービス UUID を指定して検索を始める
             val scanFilter = ScanFilter.Builder().apply {
-                setServiceUuid(ParcelUuid(BleUuid.GATT_SERVICE_UUID))
+                setServiceUuid(ParcelUuid(uuid))
             }.build()
             bluetoothLeScanner.startScan(
                 listOf(scanFilter),

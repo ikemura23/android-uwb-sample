@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.UUID
 
 class UwbResponder(private val context: Context) {
     private val scope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
@@ -35,6 +36,7 @@ class UwbResponder(private val context: Context) {
             val rangingParameters = RangingParametersFactory(
                 addressByteArray = controleeSession.localAddress.address,
                 bleCentralManager = BleCentralManager(context),
+                uuid = UUID.fromString("BleUuid.GATT_SERVICE_UUID"),
             ).create()
 
             rangingJob = scope.launch {
@@ -43,7 +45,7 @@ class UwbResponder(private val context: Context) {
                         is RangingResult.RangingResultPosition -> {
                             Log.d(
                                 TAG,
-                                "device: ${rangingResult.device.address}, position: ${rangingResult.position.logValue()}"
+                                "device: ${rangingResult.device.address}, position: ${rangingResult.position.logValue()}",
                             )
                             _rangingResult.emit(rangingResult.position)
                         }
