@@ -11,10 +11,7 @@ import androidx.lifecycle.viewModelScope
 import com.yumemi.uwb.sample.oob.ble.BlePeripheralManager
 import com.yumemi.uwb.sample.uwb.UwbControllerParams
 import com.yumemi.uwb.sample.uwb.logValue
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,7 +38,6 @@ data class BleDeviceConnectionUiState(
 )
 
 class BleDeviceConnectionViewModel : ViewModel() {
-    private val scope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
     private val _uiState = MutableStateFlow(BleDeviceConnectionUiState())
     val uiState: StateFlow<BleDeviceConnectionUiState> = _uiState.asStateFlow()
     private var rangingJob: Job? = null
@@ -49,8 +45,6 @@ class BleDeviceConnectionViewModel : ViewModel() {
     // セッションIDとセッションキー情報はランダムに生成
     private val sessionId: Int = Random.nextInt()
     private val sessionKeyInfo: ByteArray = Random.nextBytes(8)
-
-    private lateinit var rangingParameters: RangingParameters
 
     init {
         val initialDevices = DeviceType.ALL.associate { deviceType ->
@@ -111,18 +105,6 @@ class BleDeviceConnectionViewModel : ViewModel() {
                 val controleeAddress: ByteArray = controleeAddressFlow.filterNotNull().first()
                 peripheralJob.cancel()
                 Log.d(TAG, "RangingParameters を作り UWB 接続を開始する")
-                // RangingParameters を作り UWB 接続を開始する
-                rangingParameters = RangingParameters(
-                    uwbConfigType = RangingParameters.CONFIG_MULTICAST_DS_TWR,
-                    complexChannel = controllerSession.uwbComplexChannel,
-                    peerDevices = listOf(UwbDevice.createForAddress(controleeAddress)),
-                    updateRateType = RangingParameters.RANGING_UPDATE_RATE_AUTOMATIC,
-                    sessionId = sessionId,
-                    sessionKeyInfo = sessionKeyInfo,
-                    subSessionId = 0, // SUB_SESSION_UNSET
-                    subSessionKeyInfo = null, // 暗号化の何か
-                )
-                Log.d(TAG, "rangingParameters: $rangingParameters")
                 _uiState.update { currentState ->
                     val deviceToUpdate = currentState.devices[deviceId]
                     if (deviceToUpdate != null) {
@@ -137,32 +119,6 @@ class BleDeviceConnectionViewModel : ViewModel() {
                     }
                 }
                 Log.d(TAG, "onDeviceClick 正常終了")
-                /////////
-                // val bleCentralManager = BleCentralManager(context, UUID.fromString(deviceId))
-                // // BLE GATT サーバーへ接続し、UWB ゲスト と接続に必要なパラメーターを送受信する
-                // bleCentralManager.connectGattServer()
-                // val uwbControllerParamsByteArray = bleCentralManager.readCharacteristic()
-                // val uwbControllerParams: UwbControllerParams = UwbControllerParams.decode(uwbControllerParamsByteArray)
-                // Log.d(TAG, "UWB Controller Params: $uwbControllerParams")
-                // val addressByteArray = UwbManager.createInstance(context).controleeSessionScope().localAddress.address
-                // bleCentralManager.writeCharacteristic(addressByteArray)
-                // bleCentralManager.destroy()
-                //
-                // val uwbDevice = UwbDevice.createForAddress(uwbControllerParams.address)
-                //
-                // _uiState.update { currentState ->
-                //     val deviceToUpdate = currentState.devices[deviceId]
-                //     if (deviceToUpdate != null) {
-                //         val updatedDevice = deviceToUpdate.copy(
-                //             isLoading = false,
-                //             isBleConnected = true,
-                //             uwbDevice = uwbDevice,
-                //         )
-                //         currentState.copy(devices = currentState.devices + (deviceId to updatedDevice))
-                //     } else {
-                //         currentState
-                //     }
-                // }
             } catch (e: Exception) {
                 Log.e("BleDeviceConnectionViewModel", "Failed to get ranging parameters for $deviceId", e)
             }
@@ -184,7 +140,6 @@ class BleDeviceConnectionViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                // rangingJob = scope.launch {
                 Log.d(TAG, "scope.launch")
                 val uwbManager = UwbManager.createInstance(context)
                 val controllerSession = uwbManager.controllerSessionScope()
@@ -218,7 +173,6 @@ class BleDeviceConnectionViewModel : ViewModel() {
                         }
                     }
                 }
-                // }
                 // 接続済みのデバイスに対して測距を開始
             } catch (e: Exception) {
                 Log.e("BleDeviceConnectionViewModel", "Failed to start ranging", e)
