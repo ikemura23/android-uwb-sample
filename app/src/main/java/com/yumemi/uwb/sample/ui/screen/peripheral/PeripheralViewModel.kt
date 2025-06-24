@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.core.uwb.RangingResult
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.yumemi.uwb.sample.uwb.UwbController
 import com.yumemi.uwb.sample.uwb.UwbResponder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,14 +12,14 @@ import kotlinx.coroutines.launch
 
 class PeripheralViewModel(context: Context) : ViewModel() {
 
-    private val uwbResponder = UwbController(context)
+    private val uwbResponder = UwbResponder(context)
 
     private val _rangingResult = MutableStateFlow<RangingResult.RangingResultPosition?>(null)
     val rangingPosition: StateFlow<RangingResult.RangingResultPosition?> = _rangingResult.asStateFlow()
 
     init {
         viewModelScope.launch {
-            uwbResponder.startBlePeripheral()
+            uwbResponder.fetchUwbControllerParams()
         }
 
         // rangingPosition Flowを監視

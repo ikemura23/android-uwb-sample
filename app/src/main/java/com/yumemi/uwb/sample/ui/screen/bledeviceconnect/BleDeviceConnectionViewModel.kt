@@ -8,7 +8,8 @@ import androidx.core.uwb.UwbDevice
 import androidx.core.uwb.UwbManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.yumemi.uwb.sample.oob.ble.BleCentralManager
+import com.yumemi.uwb.sample.oob.ble.BlePeripheralManager
+import com.yumemi.uwb.sample.uwb.UwbController
 import com.yumemi.uwb.sample.uwb.UwbControllerParams
 import com.yumemi.uwb.sample.uwb.logValue
 import kotlinx.coroutines.CoroutineScope
@@ -18,9 +19,10 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.UUID
 import kotlin.random.Random
 
 data class BleDevice(
@@ -44,6 +46,13 @@ class BleDeviceConnectionViewModel : ViewModel() {
     val uiState: StateFlow<BleDeviceConnectionUiState> = _uiState.asStateFlow()
     private var rangingJob: Job? = null
 
+    // セッションIDとセッションキー情報はランダムに生成
+    private val sessionId: Int = Random.nextInt()
+    private val sessionKeyInfo: ByteArray = Random.nextBytes(8)
+
+    private lateinit var uwbController: UwbController
+    private lateinit var rangingParameters: RangingParameters
+
     init {
         val initialDevices = DeviceType.ALL.associate { deviceType ->
             deviceType.uuid to BleDevice(id = deviceType.uuid, name = deviceType.displayName)
@@ -51,7 +60,11 @@ class BleDeviceConnectionViewModel : ViewModel() {
         _uiState.value = BleDeviceConnectionUiState(devices = initialDevices)
     }
 
-    fun onDeviceClick(context: Context, deviceId: String) {
+    fun onDeviceClick(
+        context: Context,
+        deviceId: String,
+    ) {
+        Log.d(TAG, "onDeviceClick deviceId: $deviceId")
         _uiState.update { currentState ->
             val updatedDevice = currentState.devices[deviceId]?.copy(isLoading = true)
             if (updatedDevice != null) {
@@ -63,31 +76,93 @@ class BleDeviceConnectionViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                val bleCentralManager = BleCentralManager(context, UUID.fromString(deviceId))
-                // BLE GATT サーバーへ接続し、UWB ゲスト と接続に必要なパラメーターを送受信する
-                bleCentralManager.connectGattServer()
-                val uwbControllerParamsByteArray = bleCentralManager.readCharacteristic()
-                val uwbControllerParams: UwbControllerParams = UwbControllerParams.decode(uwbControllerParamsByteArray)
-                Log.d(TAG, "UWB Controller Params: $uwbControllerParams")
-                val addressByteArray = UwbManager.createInstance(context).controleeSessionScope().localAddress.address
-                bleCentralManager.writeCharacteristic(addressByteArray)
-                bleCentralManager.destroy()
+                val uwbManager = UwbManager.createInstance(context)
+                val controllerSession = uwbManager.controllerSessionScope()
+                Log.d(TAG, "controllerSession.uwbComplexChannel: ${controllerSession.uwbComplexChannel}")
 
-                val uwbDevice = UwbDevice.createForAddress(uwbControllerParams.address)
-
+                val uwbControllerParams = UwbControllerParams(
+                    address = controllerSession.localAddress.address,
+                    channel = controllerSession.uwbComplexChannel.channel,
+                    preambleIndex = controllerSession.uwbComplexChannel.preambleIndex,
+                    sessionId = sessionId,
+                    sessionKeyInfo = sessionKeyInfo,
+                )
+                // バイト配列に
+                val encodeHostParameter = UwbControllerParams.encode(uwbControllerParams)
+                // Controlee 側からアドレスが送られてきたら入れる Flow
+                val controleeAddressFlow = MutableStateFlow<ByteArray?>(null)
+                // BLE の開始
+                Log.d(TAG,"BLE の開始")
+                val peripheralJob = launch {
+                    BlePeripheralManager.startPeripheralAndAdvertising(
+                        context = context,
+                        onCharacteristicReadRequest = {
+                            // controlee へ送る
+                            encodeHostParameter
+                        },
+                        onCharacteristicWriteRequest = {
+                            // controlee から受け取る
+                            controleeAddressFlow.value = it
+                        },
+                    )
+                }
+                Log.d(TAG,"アドレスが送られてきたらペリフェラル終了")
+                // アドレスが送られてきたらペリフェラル終了
+                val controleeAddress = controleeAddressFlow.filterNotNull().first()
+                peripheralJob.cancel()
+                Log.d(TAG,"RangingParameters を作り UWB 接続を開始する")
+                // RangingParameters を作り UWB 接続を開始する
+                rangingParameters = RangingParameters(
+                    uwbConfigType = RangingParameters.CONFIG_MULTICAST_DS_TWR,
+                    complexChannel = controllerSession.uwbComplexChannel,
+                    peerDevices = listOf(UwbDevice.createForAddress(controleeAddress)),
+                    updateRateType = RangingParameters.RANGING_UPDATE_RATE_AUTOMATIC,
+                    sessionId = sessionId,
+                    sessionKeyInfo = sessionKeyInfo,
+                    subSessionId = 0, // SUB_SESSION_UNSET
+                    subSessionKeyInfo = null // 暗号化の何か
+                )
+                Log.d(TAG,"rangingParameters: $rangingParameters")
                 _uiState.update { currentState ->
                     val deviceToUpdate = currentState.devices[deviceId]
                     if (deviceToUpdate != null) {
                         val updatedDevice = deviceToUpdate.copy(
                             isLoading = false,
                             isBleConnected = true,
-                            uwbDevice = uwbDevice,
+                            // uwbDevice = uwbDevice,
                         )
                         currentState.copy(devices = currentState.devices + (deviceId to updatedDevice))
                     } else {
                         currentState
                     }
                 }
+
+                /////////
+                // val bleCentralManager = BleCentralManager(context, UUID.fromString(deviceId))
+                // // BLE GATT サーバーへ接続し、UWB ゲスト と接続に必要なパラメーターを送受信する
+                // bleCentralManager.connectGattServer()
+                // val uwbControllerParamsByteArray = bleCentralManager.readCharacteristic()
+                // val uwbControllerParams: UwbControllerParams = UwbControllerParams.decode(uwbControllerParamsByteArray)
+                // Log.d(TAG, "UWB Controller Params: $uwbControllerParams")
+                // val addressByteArray = UwbManager.createInstance(context).controleeSessionScope().localAddress.address
+                // bleCentralManager.writeCharacteristic(addressByteArray)
+                // bleCentralManager.destroy()
+                //
+                // val uwbDevice = UwbDevice.createForAddress(uwbControllerParams.address)
+                //
+                // _uiState.update { currentState ->
+                //     val deviceToUpdate = currentState.devices[deviceId]
+                //     if (deviceToUpdate != null) {
+                //         val updatedDevice = deviceToUpdate.copy(
+                //             isLoading = false,
+                //             isBleConnected = true,
+                //             uwbDevice = uwbDevice,
+                //         )
+                //         currentState.copy(devices = currentState.devices + (deviceId to updatedDevice))
+                //     } else {
+                //         currentState
+                //     }
+                // }
             } catch (e: Exception) {
                 Log.e("BleDeviceConnectionViewModel", "Failed to get ranging parameters for $deviceId", e)
             }
@@ -113,8 +188,6 @@ class BleDeviceConnectionViewModel : ViewModel() {
                 Log.d(TAG, "scope.launch")
                 val uwbManager = UwbManager.createInstance(context)
                 val controllerSession = uwbManager.controllerSessionScope()
-                val sessionId = Random.nextInt()
-                val sessionKeyInfo = Random.nextBytes(8)
 
                 Log.d(TAG, "RangingParametersの作成")
                 // RangingParametersの作成
