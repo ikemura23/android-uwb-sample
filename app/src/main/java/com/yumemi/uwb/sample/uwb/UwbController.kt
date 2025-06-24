@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.core.uwb.RangingParameters
 import androidx.core.uwb.RangingPosition
 import androidx.core.uwb.RangingResult
+import androidx.core.uwb.UwbComplexChannel
 import androidx.core.uwb.UwbDevice
 import androidx.core.uwb.UwbManager
 import com.yumemi.uwb.sample.oob.ble.BlePeripheralManager
@@ -29,6 +30,9 @@ class UwbController(private val context: Context) {
     private val _rangingPosition = MutableSharedFlow<RangingPosition>()
     private var rangingParameters: RangingParameters? = null
     val rangingPosition: Flow<RangingPosition> = _rangingPosition
+
+    private val _rangingResult = MutableSharedFlow<RangingResult.RangingResultPosition>()
+    val rangingResult: Flow<RangingResult.RangingResultPosition> = _rangingResult
 
     suspend fun startBlePeripheral() {
         Log.d(TAG, "startBlePeripheral")
@@ -67,7 +71,7 @@ class UwbController(private val context: Context) {
         Log.d(TAG, "RangingParameters 作成")
         rangingParameters = RangingParameters(
             uwbConfigType = RangingParameters.CONFIG_MULTICAST_DS_TWR,
-            complexChannel = controllerSession.uwbComplexChannel,
+            complexChannel = UwbComplexChannel(uwbControllerParams.channel, uwbControllerParams.preambleIndex),
             peerDevices = listOf(uwbDevice),
             updateRateType = RangingParameters.RANGING_UPDATE_RATE_AUTOMATIC,
             sessionId = sessionId,

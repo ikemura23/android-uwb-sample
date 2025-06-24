@@ -24,7 +24,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.yumemi.uwb.sample.ui.components.UwbContent
 import com.yumemi.uwb.sample.ui.theme.AndroiduwbsampleTheme
 
@@ -56,22 +55,24 @@ fun PeripheralScreen(
                 .padding(innerPadding)
                 .fillMaxSize()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             // UWB測距開始ボタン
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = "UWB測距制御",
                     fontSize = 20.sp,
-                    color = Color.White
+                    color = Color.White,
                 )
-                Button(onClick = {
-                    viewModel.startUwb()
-                }) {
+                Button(
+                    onClick = {
+                        viewModel.startUwb()
+                    },
+                ) {
                     Text("Start UWB")
                 }
             }
@@ -81,41 +82,41 @@ fun PeripheralScreen(
             // 距離表示
             UwbContent(
                 modifier = Modifier.weight(1f),
-                distance = rangingPosition?.distance?.value
+                distance = rangingPosition?.position?.distance?.value,
             )
 
             // 詳細情報表示
             if (rangingPosition != null) {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(
                         text = "詳細情報:",
                         fontSize = 18.sp,
-                        color = Color.White
+                        color = Color.White,
                     )
                     Text(
-                        text = "方位角: ${rangingPosition?.azimuth?.value?.let { "%.2f°".format(it) } ?: "N/A"}",
+                        text = "方位角: ${rangingPosition?.position?.azimuth?.value?.let { "%.2f°".format(it) } ?: "N/A"}",
                         fontSize = 16.sp,
-                        color = Color.Cyan
+                        color = Color.Cyan,
                     )
                     Text(
-                        text = "仰角: ${rangingPosition?.elevation?.value?.let { "%.2f°".format(it) } ?: "N/A"}",
+                        text = "仰角: ${rangingPosition?.position?.elevation?.value?.let { "%.2f°".format(it) } ?: "N/A"}",
                         fontSize = 16.sp,
-                        color = Color.Cyan
+                        color = Color.Cyan,
                     )
                     Text(
-                        text = "タイムスタンプ: ${rangingPosition?.elapsedRealtimeNanos ?: "N/A"}",
+                        text = "タイムスタンプ: ${rangingPosition?.position?.elapsedRealtimeNanos ?: "N/A"}",
                         fontSize = 14.sp,
-                        color = Color.Gray
+                        color = Color.Gray,
                     )
                 }
             } else {
                 Text(
                     text = "測距データがありません",
                     fontSize = 16.sp,
-                    color = Color.Gray
+                    color = Color.Gray,
                 )
             }
         }

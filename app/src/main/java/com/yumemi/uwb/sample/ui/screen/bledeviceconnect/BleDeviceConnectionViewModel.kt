@@ -2,19 +2,26 @@ package com.yumemi.uwb.sample.ui.screen.bledeviceconnect
 
 import android.content.Context
 import android.util.Log
+import androidx.core.uwb.RangingParameters
+import androidx.core.uwb.RangingResult
 import androidx.core.uwb.UwbDevice
 import androidx.core.uwb.UwbManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yumemi.uwb.sample.oob.ble.BleCentralManager
 import com.yumemi.uwb.sample.uwb.UwbControllerParams
+import com.yumemi.uwb.sample.uwb.logValue
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
+import kotlin.random.Random
 
 data class BleDevice(
     val id: String,
@@ -32,7 +39,7 @@ data class BleDeviceConnectionUiState(
 )
 
 class BleDeviceConnectionViewModel : ViewModel() {
-
+    private val scope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
     private val _uiState = MutableStateFlow(BleDeviceConnectionUiState())
     val uiState: StateFlow<BleDeviceConnectionUiState> = _uiState.asStateFlow()
     private var rangingJob: Job? = null
@@ -96,26 +103,45 @@ class BleDeviceConnectionViewModel : ViewModel() {
         }
 
         val uwbDevices: List<UwbDevice> = bleConnectedDevices.mapNotNull { it.uwbDevice }
-        Log.d(TAG, "uwbDevices: $uwbDevices")
+        Log.d(TAG, "uwbDevices: ${uwbDevices.size}")
 
         _uiState.update { it.copy(isRangingActive = true) }
 
-
         viewModelScope.launch {
             try {
+                // rangingJob = scope.launch {
+                Log.d(TAG, "scope.launch")
                 val uwbManager = UwbManager.createInstance(context)
                 val controllerSession = uwbManager.controllerSessionScope()
-                // val rangingParameters = RangingParameters(
-                //     uwbConfigType = RangingParameters.CONFIG_MULTICAST_DS_TWR,
-                //     complexChannel = UwbComplexChannel(uwbControllerParams.channel, uwbControllerParams.preambleIndex),
-                //     peerDevices = uwbDevices,
-                //     updateRateType = RangingParameters.RANGING_UPDATE_RATE_AUTOMATIC,
-                //     sessionId = uwbControllerParams.sessionId,
-                //     sessionKeyInfo = uwbControllerParams.sessionKeyInfo,
-                //     subSessionId = 0, // SESSION_ID_UNSET ？
-                //     subSessionKeyInfo = null, // ？
-                // )
+                val sessionId = Random.nextInt()
+                val sessionKeyInfo = Random.nextBytes(8)
 
+                Log.d(TAG, "RangingParametersの作成")
+                // RangingParametersの作成
+                val rangingParameters = RangingParameters(
+                    uwbConfigType = RangingParameters.CONFIG_MULTICAST_DS_TWR,
+                    complexChannel = controllerSession.uwbComplexChannel,
+                    peerDevices = uwbDevices,
+                    updateRateType = RangingParameters.RANGING_UPDATE_RATE_AUTOMATIC,
+                    sessionId = sessionId,
+                    sessionKeyInfo = sessionKeyInfo,
+                    subSessionId = 0,
+                    subSessionKeyInfo = null,
+                )
+
+                Log.d(TAG, "rangingParameters: $rangingParameters")
+                controllerSession.prepareSession(rangingParameters).collect { rangingResult ->
+                    when (rangingResult) {
+                        is RangingResult.RangingResultPosition -> {
+                            Log.d(TAG, "UWB通信成功!! rangingResult.position: ${rangingResult.position.logValue()}")
+                            // _rangingPosition.emit(rangingResult.position)
+                        }
+
+                        is RangingResult.RangingResultPeerDisconnected ->
+                            Log.d(TAG, "Peer disconnected")
+                    }
+                }
+                // }
                 // 接続済みのデバイスに対して測距を開始
             } catch (e: Exception) {
                 Log.e("BleDeviceConnectionViewModel", "Failed to start ranging", e)

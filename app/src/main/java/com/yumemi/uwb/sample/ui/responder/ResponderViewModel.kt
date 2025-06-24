@@ -22,11 +22,11 @@ class ResponderViewModel(private val uwbResponder: UwbResponder) : ViewModel() {
             try {
                 // 先にcollectを準備
                 launch {
-                    uwbResponder.rangingResult.collect { position ->
+                    uwbResponder.rangingPosition.collect { position ->
                         _uwbPosition.value = position
                     }
                 }
-                
+
                 // その後でstartRangingを実行
                 uwbResponder.startRanging()
             } catch (e: Exception) {
