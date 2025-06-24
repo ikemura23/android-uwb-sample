@@ -42,7 +42,7 @@ class BleDeviceConnectionViewModel : ViewModel() {
     val uiState: StateFlow<BleDeviceConnectionUiState> = _uiState.asStateFlow()
     private var rangingJob: Job? = null
 
-    // セッションIDとセッションキー情報はランダムに生成
+    // セッションIDとセッションキー情報はランダムに生成し、ホスト/ゲストで同一の値を使うため保持しておく
     private val sessionId: Int = Random.nextInt()
     private val sessionKeyInfo: ByteArray = Random.nextBytes(8)
 
