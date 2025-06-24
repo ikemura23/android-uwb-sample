@@ -108,7 +108,7 @@ class BleDeviceConnectionViewModel : ViewModel() {
                 }
                 Log.d(TAG, "アドレスが送られてきたらペリフェラル終了")
                 // アドレスが送られてきたらペリフェラル終了
-                val controleeAddress = controleeAddressFlow.filterNotNull().first()
+                val controleeAddress: ByteArray = controleeAddressFlow.filterNotNull().first()
                 peripheralJob.cancel()
                 Log.d(TAG, "RangingParameters を作り UWB 接続を開始する")
                 // RangingParameters を作り UWB 接続を開始する
@@ -129,14 +129,14 @@ class BleDeviceConnectionViewModel : ViewModel() {
                         val updatedDevice = deviceToUpdate.copy(
                             isLoading = false,
                             isBleConnected = true,
-                            // uwbDevice = uwbDevice,
+                            uwbDevice = UwbDevice.createForAddress(controleeAddress),
                         )
                         currentState.copy(devices = currentState.devices + (deviceId to updatedDevice))
                     } else {
                         currentState
                     }
                 }
-
+                Log.d(TAG, "onDeviceClick 正常終了")
                 /////////
                 // val bleCentralManager = BleCentralManager(context, UUID.fromString(deviceId))
                 // // BLE GATT サーバーへ接続し、UWB ゲスト と接続に必要なパラメーターを送受信する
@@ -178,7 +178,7 @@ class BleDeviceConnectionViewModel : ViewModel() {
         }
 
         val uwbDevices: List<UwbDevice> = bleConnectedDevices.mapNotNull { it.uwbDevice }
-        Log.d(TAG, "uwbDevices: ${uwbDevices.size}")
+        Log.d(TAG, "uwbDevices.size : ${uwbDevices.size}")
 
         _uiState.update { it.copy(isRangingActive = true) }
 
@@ -212,6 +212,10 @@ class BleDeviceConnectionViewModel : ViewModel() {
 
                         is RangingResult.RangingResultPeerDisconnected ->
                             Log.d(TAG, "Peer disconnected")
+
+                        is RangingResult.RangingResultInitialized -> {
+                            Log.d(TAG, "Ranging session initialized")
+                        }
                     }
                 }
                 // }
