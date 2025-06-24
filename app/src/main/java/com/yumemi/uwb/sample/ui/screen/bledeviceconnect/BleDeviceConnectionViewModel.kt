@@ -9,7 +9,6 @@ import androidx.core.uwb.UwbManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yumemi.uwb.sample.oob.ble.BlePeripheralManager
-import com.yumemi.uwb.sample.uwb.UwbController
 import com.yumemi.uwb.sample.uwb.UwbControllerParams
 import com.yumemi.uwb.sample.uwb.logValue
 import kotlinx.coroutines.CoroutineScope
@@ -23,6 +22,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.UUID
 import kotlin.random.Random
 
 data class BleDevice(
@@ -50,7 +50,6 @@ class BleDeviceConnectionViewModel : ViewModel() {
     private val sessionId: Int = Random.nextInt()
     private val sessionKeyInfo: ByteArray = Random.nextBytes(8)
 
-    private lateinit var uwbController: UwbController
     private lateinit var rangingParameters: RangingParameters
 
     init {
@@ -92,10 +91,11 @@ class BleDeviceConnectionViewModel : ViewModel() {
                 // Controlee 側からアドレスが送られてきたら入れる Flow
                 val controleeAddressFlow = MutableStateFlow<ByteArray?>(null)
                 // BLE の開始
-                Log.d(TAG,"BLE の開始")
+                Log.d(TAG, "BLE の開始")
                 val peripheralJob = launch {
                     BlePeripheralManager.startPeripheralAndAdvertising(
                         context = context,
+                        serviceUuid = UUID.fromString(deviceId),
                         onCharacteristicReadRequest = {
                             // controlee へ送る
                             encodeHostParameter
@@ -106,11 +106,11 @@ class BleDeviceConnectionViewModel : ViewModel() {
                         },
                     )
                 }
-                Log.d(TAG,"アドレスが送られてきたらペリフェラル終了")
+                Log.d(TAG, "アドレスが送られてきたらペリフェラル終了")
                 // アドレスが送られてきたらペリフェラル終了
                 val controleeAddress = controleeAddressFlow.filterNotNull().first()
                 peripheralJob.cancel()
-                Log.d(TAG,"RangingParameters を作り UWB 接続を開始する")
+                Log.d(TAG, "RangingParameters を作り UWB 接続を開始する")
                 // RangingParameters を作り UWB 接続を開始する
                 rangingParameters = RangingParameters(
                     uwbConfigType = RangingParameters.CONFIG_MULTICAST_DS_TWR,
@@ -120,9 +120,9 @@ class BleDeviceConnectionViewModel : ViewModel() {
                     sessionId = sessionId,
                     sessionKeyInfo = sessionKeyInfo,
                     subSessionId = 0, // SUB_SESSION_UNSET
-                    subSessionKeyInfo = null // 暗号化の何か
+                    subSessionKeyInfo = null, // 暗号化の何か
                 )
-                Log.d(TAG,"rangingParameters: $rangingParameters")
+                Log.d(TAG, "rangingParameters: $rangingParameters")
                 _uiState.update { currentState ->
                     val deviceToUpdate = currentState.devices[deviceId]
                     if (deviceToUpdate != null) {

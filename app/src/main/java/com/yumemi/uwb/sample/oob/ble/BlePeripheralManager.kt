@@ -13,6 +13,7 @@ import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import android.content.Context
 import android.os.ParcelUuid
+import android.util.Log
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -26,20 +27,22 @@ object BlePeripheralManager {
      * コルーチンをキャンセルすると終了する。
      *
      * @param context [Context]
+     * @param serviceUuid 使用するサービスUUID
      * @param onCharacteristicReadRequest セントラルからキャラクタリスティックに対して read 要求された時
      * @param onCharacteristicWriteRequest セントラルからキャラクタリスティックに対して write 要求された時
      */
     suspend fun startPeripheralAndAdvertising(
         context: Context,
+        serviceUuid: UUID,
         onCharacteristicReadRequest: () -> ByteArray,
         onCharacteristicWriteRequest: (ByteArray) -> Unit,
     ) {
         coroutineScope {
             launch {
-                suspendGattServer(context, onCharacteristicReadRequest, onCharacteristicWriteRequest)
+                suspendGattServer(context, serviceUuid, onCharacteristicReadRequest, onCharacteristicWriteRequest)
             }
             launch {
-                suspendAdvertisement(context)
+                suspendAdvertisement(context, serviceUuid)
             }
         }
     }
@@ -47,6 +50,7 @@ object BlePeripheralManager {
     @SuppressLint("MissingPermission")
     private suspend fun suspendGattServer(
         context: Context,
+        serviceUuid: UUID,
         onCharacteristicReadRequest: () -> ByteArray,
         onCharacteristicWriteRequest: (ByteArray) -> Unit,
     ) {
@@ -90,9 +94,9 @@ object BlePeripheralManager {
             },
         )
 
-        val deviceUuid: UUID = BleUuidProvider.getServiceUuid(context)
+        Log.d("BlePeripheralManager", "GATT サーバーのサービス UUID: $serviceUuid")
         // サービスとキャラクタリスティックを作る
-        val gattService = BluetoothGattService(deviceUuid, BluetoothGattService.SERVICE_TYPE_PRIMARY)
+        val gattService = BluetoothGattService(serviceUuid, BluetoothGattService.SERVICE_TYPE_PRIMARY)
         val gattCharacteristics = BluetoothGattCharacteristic(
             BleUuid.GATT_CHARACTERISTIC_UUID,
             BluetoothGattCharacteristic.PROPERTY_READ or BluetoothGattCharacteristic.PROPERTY_WRITE,
@@ -112,7 +116,7 @@ object BlePeripheralManager {
     }
 
     @SuppressLint("MissingPermission")
-    private suspend fun suspendAdvertisement(context: Context) {
+    private suspend fun suspendAdvertisement(context: Context, serviceUuid: UUID) {
         val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         val bluetoothLeAdvertiser = bluetoothManager.adapter.bluetoothLeAdvertiser
 
@@ -121,9 +125,8 @@ object BlePeripheralManager {
             setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_POWER)
             setTimeout(0)
         }.build()
-        val deviceUuid: UUID = BleUuidProvider.getServiceUuid(context)
         val advertiseData = AdvertiseData.Builder().apply {
-            addServiceUuid(ParcelUuid(deviceUuid))
+            addServiceUuid(ParcelUuid(serviceUuid))
         }.build()
         // アドバタイジング開始
         val advertiseCallback = object : AdvertiseCallback() {

@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.UUID
 import kotlin.random.Random
 
 class UwbController(private val context: Context) {
@@ -34,7 +35,7 @@ class UwbController(private val context: Context) {
     private val _rangingResult = MutableSharedFlow<RangingResult.RangingResultPosition>()
     val rangingResult: Flow<RangingResult.RangingResultPosition> = _rangingResult
 
-    suspend fun startBlePeripheral() {
+    suspend fun startBlePeripheral(serviceUuid: UUID,) {
         Log.d(TAG, "startBlePeripheral")
         uwbManager = UwbManager.createInstance(context)
         val controllerSession = uwbManager.controllerSessionScope()
@@ -57,6 +58,7 @@ class UwbController(private val context: Context) {
         val peripheralJob = scope.launch {
             BlePeripheralManager.startPeripheralAndAdvertising(
                 context = context,
+                serviceUuid = serviceUuid,
                 onCharacteristicReadRequest = { encodeHostParameter },
                 onCharacteristicWriteRequest = { controleeAddressFlow.value = it },
             )
@@ -103,7 +105,7 @@ class UwbController(private val context: Context) {
     }
 
     // 制御対象の UWB 測距を開始する
-    suspend fun startRanging() {
+    suspend fun startRanging(serviceUuid: UUID) {
         Log.d(TAG, "startRanging")
         withContext(Dispatchers.Main.immediate) {
             uwbManager = UwbManager.createInstance(context)
@@ -128,6 +130,7 @@ class UwbController(private val context: Context) {
             val peripheralJob = scope.launch {
                 BlePeripheralManager.startPeripheralAndAdvertising(
                     context = context,
+                    serviceUuid = serviceUuid,
                     onCharacteristicReadRequest = { encodeHostParameter },
                     onCharacteristicWriteRequest = { controleeAddressFlow.value = it },
                 )

@@ -26,18 +26,18 @@ import com.yumemi.uwb.sample.uwb.UwbController
 @Composable
 fun ControllerScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val uwbController = UwbController(context)
+    // val uwbController = UwbController(context)
     val uwbPosition: MutableState<RangingPosition?> = remember { mutableStateOf(null) }
 
     LaunchedEffect(Unit) {
-        uwbController.startRanging()
-        uwbController.rangingPosition.collect { position ->
-            uwbPosition.value = position
-        }
+        // uwbController.startRanging()
+        // uwbController.rangingPosition.collect { position ->
+        //     uwbPosition.value = position
+        // }
     }
     DisposableEffect(Unit) {
         onDispose {
-            uwbController.cancelRanging()
+            // uwbController.cancelRanging()
         }
     }
     Scaffold(
