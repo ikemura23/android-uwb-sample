@@ -42,7 +42,7 @@ fun BleDeviceConnectionScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     val devices = uiState.devices.values.sortedBy { device ->
-        DeviceUuid.ALL.indexOf(device.id)
+        DeviceType.ALL.indexOfFirst { it.uuid == device.id }
     }
 
     Scaffold(
@@ -158,19 +158,19 @@ fun BleContent(
 // プレビュー用のダミーデータ
 private val previewDevices = listOf(
     BleDevice(
-        id = DeviceUuid.GREEN,
+        id = DeviceType.GREEN.uuid,
         name = "デバイス1",
     ),
     BleDevice(
-        id = DeviceUuid.RED,
+        id = DeviceType.RED.uuid,
         name = "デバイス2",
     ),
     BleDevice(
-        id = DeviceUuid.YELLOW,
+        id = DeviceType.YELLOW.uuid,
         name = "デバイス3",
     ),
     BleDevice(
-        id = DeviceUuid.BROWN,
+        id = DeviceType.BROWN.uuid,
         name = "デバイス4",
     ),
 )

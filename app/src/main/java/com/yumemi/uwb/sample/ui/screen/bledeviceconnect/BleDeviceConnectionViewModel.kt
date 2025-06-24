@@ -33,16 +33,9 @@ class BleDeviceConnectionViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(BleDeviceConnectionUiState())
     val uiState: StateFlow<BleDeviceConnectionUiState> = _uiState.asStateFlow()
 
-    private val deviceNames = mapOf(
-        DeviceUuid.GREEN to "緑",
-        DeviceUuid.RED to "赤",
-        DeviceUuid.YELLOW to "黄",
-        DeviceUuid.BROWN to "茶"
-    )
-
     init {
-        val initialDevices = DeviceUuid.ALL.associateWith { uuid ->
-            BleDevice(id = uuid, name = deviceNames[uuid] ?: "Unknown Device")
+        val initialDevices = DeviceType.ALL.associate { deviceType ->
+            deviceType.uuid to BleDevice(id = deviceType.uuid, name = deviceType.displayName)
         }
         _uiState.value = BleDeviceConnectionUiState(devices = initialDevices)
     }
@@ -87,15 +80,4 @@ class BleDeviceConnectionViewModel : ViewModel() {
     fun startRanging() {
 
     }
-}
-
-/**
- * Pixel 9 の UUID、固定で4台定義しておく
- */
-object DeviceUuid {
-    const val GREEN = "50f6971d-9875-33c7-b231-8e2f99bdb811"
-    const val RED = "27cd139d-5b54-38d6-9999-089e17cf9c23"
-    const val YELLOW = "4247b308-be67-39a6-bd26-00e4d8f469cf"
-    const val BROWN = "692ffa86-df4c-317d-8532-4f3f2deb1dba"
-    val ALL = listOf(GREEN, RED, YELLOW, BROWN)
 }
