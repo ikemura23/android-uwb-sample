@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -19,6 +20,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment.Companion.CenterVertically
@@ -45,6 +47,13 @@ fun BleDeviceConnectionScreen(
         DeviceType.ALL.indexOfFirst { it.uuid == device.id }
     }
 
+    // 画面破棄時にcancelRangingを呼び出し
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.cancelRanging()
+        }
+    }
+
     Scaffold(
         modifier = modifier.background(color = Color.Black),
         containerColor = Color.Black,
@@ -61,10 +70,17 @@ fun BleDeviceConnectionScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    viewModel.startRanging()
+                    if (uiState.isRangingActive) {
+                        viewModel.cancelRanging()
+                    } else {
+                        viewModel.startRanging(context)
+                    }
                 },
             ) {
-                Icon(Icons.Filled.PlayArrow, contentDescription = "開始")
+                Icon(
+                    if (uiState.isRangingActive) Icons.Filled.Warning else Icons.Filled.PlayArrow,
+                    contentDescription = if (uiState.isRangingActive) "停止" else "開始",
+                )
             }
         },
     ) { innerPadding ->
@@ -101,7 +117,18 @@ fun BleDeviceConnectionScreen(
                 verticalArrangement = Arrangement.SpaceAround,
             ) {
                 devices.forEach { device ->
-                    Text("TODO: UWBのstatus", color = Color.White)
+                    Text(
+                        text = when {
+                            device.isUwbConnected -> "UWB接続済み"
+                            device.isBleConnected -> "UWB未接続"
+                            else -> "UWB未接続"
+                        },
+                        color = when {
+                            device.isUwbConnected -> Color.Green
+                            device.isBleConnected -> Color.Yellow
+                            else -> Color.Gray
+                        },
+                    )
                 }
             }
         }
