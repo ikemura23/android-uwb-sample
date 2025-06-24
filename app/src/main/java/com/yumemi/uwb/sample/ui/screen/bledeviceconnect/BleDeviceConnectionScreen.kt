@@ -81,14 +81,15 @@ fun BleDeviceConnectionScreen(
                     .padding(end = 16.dp),
                 verticalArrangement = Arrangement.SpaceAround,
             ) {
-                devices.forEach { device ->
+                devices.forEach { device: BleDevice ->
                     BleContent(
                         onClick = { viewModel.onDeviceClick(context, device.id) },
                         bleStatus = when {
                             device.isLoading -> "接続中..."
                             device.isBleConnected -> "接続済み"
                             else -> "未接続"
-                        }
+                        },
+                        name = device.name,
                     )
                 }
             }
@@ -100,7 +101,7 @@ fun BleDeviceConnectionScreen(
                 verticalArrangement = Arrangement.SpaceAround,
             ) {
                 devices.forEach { device ->
-                    Text(device.name, color = Color.White)
+                    Text("TODO: UWBのstatus", color = Color.White)
                 }
             }
         }
@@ -123,7 +124,7 @@ fun BleDeviceItem(
             onClick = onClick,
         ) {
             Text(
-                if (device.isConnected) "切断" else "接続",
+                if (device.isBleConnected) "切断" else "接続",
                 color = Color.White,
             )
         }
@@ -135,6 +136,7 @@ fun BleContent(
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
     bleStatus: String = "未接続",
+    name: String = "デバイス名",
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -143,7 +145,7 @@ fun BleContent(
         Button(
             onClick = onClick,
         ) {
-            Text("BLE接続")
+            Text(name)
         }
         Spacer(modifier = Modifier.size(16.dp))
         Text(
@@ -156,20 +158,20 @@ fun BleContent(
 // プレビュー用のダミーデータ
 private val previewDevices = listOf(
     BleDevice(
+        id = DeviceUuid.GREEN,
         name = "デバイス1",
-        isConnected = false,
     ),
     BleDevice(
+        id = DeviceUuid.RED,
         name = "デバイス2",
-        isConnected = true,
     ),
     BleDevice(
+        id = DeviceUuid.YELLOW,
         name = "デバイス3",
-        isConnected = false,
     ),
     BleDevice(
+        id = DeviceUuid.BROWN,
         name = "デバイス4",
-        isConnected = false,
     ),
 )
 

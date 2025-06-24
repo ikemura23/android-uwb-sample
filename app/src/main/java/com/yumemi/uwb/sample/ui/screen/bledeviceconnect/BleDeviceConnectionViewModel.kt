@@ -34,10 +34,10 @@ class BleDeviceConnectionViewModel : ViewModel() {
     val uiState: StateFlow<BleDeviceConnectionUiState> = _uiState.asStateFlow()
 
     private val deviceNames = mapOf(
-        DeviceUuid.GREEN to "デバイス1",
-        DeviceUuid.RED to "デバイス2",
-        DeviceUuid.YELLOW to "デバイス3",
-        DeviceUuid.BROWN to "デバイス4"
+        DeviceUuid.GREEN to "緑",
+        DeviceUuid.RED to "赤",
+        DeviceUuid.YELLOW to "黄",
+        DeviceUuid.BROWN to "茶"
     )
 
     init {
