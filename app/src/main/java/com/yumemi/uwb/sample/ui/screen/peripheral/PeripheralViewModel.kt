@@ -7,11 +7,18 @@ import com.yumemi.uwb.sample.uwb.UwbController
 import kotlinx.coroutines.launch
 
 class PeripheralViewModel(context: Context) : ViewModel() {
+
     private val uwbController = UwbController(context)
 
     init {
         viewModelScope.launch {
-            uwbController.startRanging()
+            uwbController.startBlePeripheral()
+        }
+    }
+
+    fun startUwb() {
+        viewModelScope.launch {
+            uwbController.startUwbRanging()
         }
     }
 }

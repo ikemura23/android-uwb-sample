@@ -1,6 +1,8 @@
 package com.yumemi.uwb.sample.ui.screen.peripheral
 
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -17,9 +19,11 @@ import com.yumemi.uwb.sample.ui.theme.AndroiduwbsampleTheme
 @Composable
 fun PeripheralScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val viewModel = remember { PeripheralViewModel(
-        context = context,
-    ) }
+    val viewModel = remember {
+        PeripheralViewModel(
+            context = context,
+        )
+    }
 
     Scaffold(
         modifier = modifier,
@@ -30,14 +34,25 @@ fun PeripheralScreen(modifier: Modifier = Modifier) {
             )
         },
     ) { innerPadding ->
-        Text(
-            "Peripheral Screen", 
-            modifier = Modifier.padding(innerPadding)
-        )
+        Row(modifier = Modifier.padding(innerPadding)) {
+            Text(
+                "Peripheral Screen",
+            )
+            Button(onClick = {
+                viewModel.startUwb()
+            }) {
+                Text("Start UWB")
+            }
+        }
+
     }
 }
 
-@Preview
+@Preview(
+    showBackground = true,
+    widthDp = 1280,
+    heightDp = 720,
+)
 @Composable
 private fun PeripheralScreenPreview() {
     AndroiduwbsampleTheme {

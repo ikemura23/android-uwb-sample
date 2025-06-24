@@ -27,7 +27,76 @@ class UwbController(private val context: Context) {
     private var rangingJob: Job? = null
     private lateinit var uwbManager: UwbManager
     private val _rangingPosition = MutableSharedFlow<RangingPosition>()
+    private var rangingParameters: RangingParameters? = null
     val rangingPosition: Flow<RangingPosition> = _rangingPosition
+
+    suspend fun startBlePeripheral() {
+        Log.d(TAG, "startBlePeripheral")
+        uwbManager = UwbManager.createInstance(context)
+        val controllerSession = uwbManager.controllerSessionScope()
+
+        val sessionId = Random.nextInt()
+        val sessionKeyInfo = Random.nextBytes(8)
+        val uwbControllerParams = UwbControllerParams(
+            address = controllerSession.localAddress.address,
+            channel = controllerSession.uwbComplexChannel.channel,
+            preambleIndex = controllerSession.uwbComplexChannel.preambleIndex,
+            sessionId = sessionId,
+            sessionKeyInfo = sessionKeyInfo,
+        )
+        val encodeHostParameter = UwbControllerParams.encode(uwbControllerParams)
+
+        val controleeAddressFlow = MutableStateFlow<ByteArray?>(null)
+
+        Log.d(TAG, "ペリフェラルを開始")
+        // BLE ペリフェラルを開始
+        val peripheralJob = scope.launch {
+            BlePeripheralManager.startPeripheralAndAdvertising(
+                context = context,
+                onCharacteristicReadRequest = { encodeHostParameter },
+                onCharacteristicWriteRequest = { controleeAddressFlow.value = it },
+            )
+        }
+        Log.d(TAG, "アドレスが送られてくるまで待機")
+        // アドレスが送られてくるまで待機
+        val controleeAddress = controleeAddressFlow.filterNotNull().first()
+        val uwbDevice: UwbDevice = UwbDevice.createForAddress(controleeAddress)
+        Log.d(TAG, "uwbDevice.address: ${uwbDevice.address}")
+        peripheralJob.cancel()
+
+        Log.d(TAG, "RangingParameters 作成")
+        rangingParameters = RangingParameters(
+            uwbConfigType = RangingParameters.CONFIG_MULTICAST_DS_TWR,
+            complexChannel = controllerSession.uwbComplexChannel,
+            peerDevices = listOf(uwbDevice),
+            updateRateType = RangingParameters.RANGING_UPDATE_RATE_AUTOMATIC,
+            sessionId = sessionId,
+            sessionKeyInfo = sessionKeyInfo,
+            subSessionId = 0,
+            subSessionKeyInfo = null,
+        )
+    }
+
+    suspend fun startUwbRanging() {
+        Log.d(TAG, "startUwbRanging")
+        rangingParameters ?: return
+
+        val controllerSession = uwbManager.controllerSessionScope()
+        rangingJob = scope.launch {
+
+            controllerSession.prepareSession(rangingParameters!!).collect { rangingResult ->
+                when (rangingResult) {
+                    is RangingResult.RangingResultPosition -> {
+                        Log.d("UwbController", "device: ${rangingResult.device.address}, position: ${rangingResult.position.logValue()}")
+                        _rangingPosition.emit(rangingResult.position)
+                    }
+
+                    is RangingResult.RangingResultPeerDisconnected ->
+                        Log.d(TAG, "Peer disconnected: $rangingResult")
+                }
+            }
+        }
+    }
 
     // 制御対象の UWB 測距を開始する
     suspend fun startRanging() {
@@ -45,6 +114,7 @@ class UwbController(private val context: Context) {
                 sessionId = sessionId,
                 sessionKeyInfo = sessionKeyInfo,
             )
+            var rangingParameters: RangingParameters? = null
             val encodeHostParameter = UwbControllerParams.encode(uwbControllerParams)
 
             val controleeAddressFlow = MutableStateFlow<ByteArray?>(null)
@@ -66,7 +136,7 @@ class UwbController(private val context: Context) {
             peripheralJob.cancel()
 
             Log.d(TAG, "RangingParameters 作成")
-            val rangingParameters = RangingParameters(
+            rangingParameters = RangingParameters(
                 uwbConfigType = RangingParameters.CONFIG_MULTICAST_DS_TWR,
                 complexChannel = controllerSession.uwbComplexChannel,
                 peerDevices = listOf(uwbDevice),
