@@ -1,9 +1,5 @@
 package com.yumemi.uwb.sample.ui.controller
 
-import android.os.Handler
-import android.os.Looper
-import android.util.Log
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -22,10 +18,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.uwb.RangingPosition
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.yumemi.uwb.sample.ui.components.UwbContent
 import com.yumemi.uwb.sample.ui.theme.AndroiduwbsampleTheme
 import com.yumemi.uwb.sample.uwb.UwbController
-import com.yumemi.uwb.sample.wifiaware.WifiAwareManagerWrapper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,39 +29,14 @@ fun ControllerScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val uwbController = UwbController(context)
     val uwbPosition: MutableState<RangingPosition?> = remember { mutableStateOf(null) }
-
-    // Wifi Awareのメッセージ送信を制御するためのハンドラーとRunnable
-    lateinit var handler: Handler
-    lateinit var sendMessageRunnable: Runnable
-    var isAutoSendingEnabled = false
-    // Wifi Awareのラッパークラス
-    val wifiAwareManager = WifiAwareManagerWrapper(
-        context = context,
-        onMessageReceived = { peerHandle, message ->
-            // メッセージ受信時の処理
-            Toast.makeText(context, "Message from peer ${peerHandle}: $message", Toast.LENGTH_SHORT).show()
-            Log.d(TAG, "Message received from peer ${peerHandle}: $message")
-        },
-        onAwareUnavailable = {
-            Log.d(TAG, "onAwareUnavailable")
-        },
-    )
+    val viewModel: ControllerViewModel = viewModel()
 
     LaunchedEffect(Unit) {
         uwbController.startRanging()
         uwbController.rangingPosition.collect { position ->
             uwbPosition.value = position
         }
-        wifiAwareManager.initialize()
-        handler = Handler(Looper.getMainLooper())
-        sendMessageRunnable = object : Runnable {
-            override fun run() {
-                if (isAutoSendingEnabled) {
-                    wifiAwareManager.sendMessageToAll("AUTO Message - ${System.currentTimeMillis()}")
-                    handler.postDelayed(this, 2000)
-                }
-            }
-        }
+        viewModel.initializeWifiAware(context)
     }
     DisposableEffect(Unit) {
         onDispose {
@@ -85,21 +56,11 @@ fun ControllerScreen(modifier: Modifier = Modifier) {
             modifier = Modifier.Companion.padding(innerPadding),
             distance = uwbPosition.value?.distance?.value,
             onClick = {
-                if (isAutoSendingEnabled) {
-                    isAutoSendingEnabled = false
-                    handler.removeCallbacks(sendMessageRunnable)
-                    Log.d(TAG, "Auto sending stopped")
-                } else {
-                    isAutoSendingEnabled = true
-                    handler.post(sendMessageRunnable)
-                    Log.d(TAG, "Auto sending started")
-                }
+                viewModel.toggleAutoSending()
             },
         )
     }
 }
-
-private const val TAG = "ControllerScreen"
 
 @Preview(
     showBackground = true,
