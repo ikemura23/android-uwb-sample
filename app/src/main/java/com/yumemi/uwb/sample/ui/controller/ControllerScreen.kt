@@ -2,6 +2,7 @@ package com.yumemi.uwb.sample.ui.controller
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -55,8 +56,14 @@ fun ControllerScreen(modifier: Modifier = Modifier) {
         UwbContent(
             modifier = Modifier.Companion.padding(innerPadding),
             distance = uwbPosition.value?.distance?.value,
-            onClick = {
-                viewModel.toggleAutoSending()
+            content = {
+                Button(
+                    onClick = {
+                        viewModel.toggleAutoSending()
+                    },
+                ) {
+                    Text("Wifi Aware開始")
+                }
             },
         )
     }

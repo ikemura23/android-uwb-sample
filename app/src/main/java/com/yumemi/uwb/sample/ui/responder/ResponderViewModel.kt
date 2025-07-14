@@ -57,13 +57,13 @@ class ResponderViewModel(private val uwbResponder: UwbResponder) : ViewModel() {
         }
     }
 
-    fun startSubscriber() {
-        if (::wifiAwareManager.isInitialized) {
-            Log.d(TAG, "WiFi Aware Subscriber already initialized")
-        } else {
-            Log.w(TAG, "WiFi Aware Manager not initialized. Call initializeWifiAware() first.")
-        }
-    }
+    // fun startSubscriber() {
+    //     if (::wifiAwareManager.isInitialized) {
+    //         Log.d(TAG, "WiFi Aware Subscriber already initialized")
+    //     } else {
+    //         Log.w(TAG, "WiFi Aware Manager not initialized. Call initializeWifiAware() first.")
+    //     }
+    // }
 
     override fun onCleared() {
         super.onCleared()

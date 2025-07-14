@@ -29,7 +29,6 @@ fun ResponderScreen(modifier: Modifier = Modifier) {
     }
     LaunchedEffect(Unit) {
         viewModel.initializeWifiAware(context)
-        viewModel.startSubscriber()
     }
 
     Scaffold(
@@ -46,6 +45,15 @@ fun ResponderScreen(modifier: Modifier = Modifier) {
                 .padding(innerPadding)
                 .background(color = Color.DarkGray),
             distance = viewModel.uwbPosition.value?.distance?.value,
+            // content = {
+            //     Button(
+            //         onClick = {
+            //             viewModel.startSubscriber()
+            //         },
+            //     ) {
+            //         Text("Wifi Aware受信")
+            //     }
+            // },
         )
     }
 }

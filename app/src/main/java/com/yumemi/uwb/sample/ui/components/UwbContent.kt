@@ -24,7 +24,7 @@ import java.math.RoundingMode
 fun UwbContent(
     modifier: Modifier = Modifier,
     distance: Float?,
-    onClick: () -> Unit = {},
+    content: @Composable () -> Unit = { /* No-op */ },
 ) {
     Box(
         modifier = modifier
@@ -42,11 +42,7 @@ fun UwbContent(
                 fontSize = 60.sp,
             )
             Spacer(modifier = Modifier.padding(24.dp))
-            Button(
-                onClick = onClick,
-            ) {
-                Text("Wifi Aware開始")
-            }
+            content()
             Spacer(modifier = Modifier.weight(1f))
             // 値
             Text(
