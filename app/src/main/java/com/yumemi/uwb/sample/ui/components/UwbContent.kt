@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,6 +24,7 @@ import java.math.RoundingMode
 fun UwbContent(
     modifier: Modifier = Modifier,
     distance: Float?,
+    onClick: () -> Unit = {},
 ) {
     Box(
         modifier = modifier
@@ -32,14 +34,20 @@ fun UwbContent(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) {
             // 距離
             Text(
                 text = "距離(m)",
                 fontSize = 60.sp,
             )
-            Spacer(modifier = Modifier.padding(24.dp).weight(1f))
+            Spacer(modifier = Modifier.padding(24.dp))
+            Button(
+                onClick = onClick,
+            ) {
+                Text("Wifi Aware開始")
+            }
+            Spacer(modifier = Modifier.weight(1f))
             // 値
             Text(
                 text = distance?.let(::formatDistance) ?: "",
