@@ -1,5 +1,6 @@
 package com.yumemi.uwb.sample.ui.controller
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -21,6 +22,7 @@ import androidx.core.uwb.RangingPosition
 import com.yumemi.uwb.sample.ui.components.UwbContent
 import com.yumemi.uwb.sample.ui.theme.AndroiduwbsampleTheme
 import com.yumemi.uwb.sample.uwb.UwbController
+import com.yumemi.uwb.sample.wifiaware.WifiAwareManagerWrapper
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,6 +36,19 @@ fun ControllerScreen(modifier: Modifier = Modifier) {
         uwbController.rangingPosition.collect { position ->
             uwbPosition.value = position
         }
+
+        // Wifi Aware の初期化や接続処理が必要な場合はここで行う
+        val wifiAwareManager = WifiAwareManagerWrapper(
+            context = context,
+            onMessageReceived = { peerHandle, message ->
+                // メッセージ受信時の処理
+                Log.d("ControllerScreen", "Message received from peer ${peerHandle}: $message")
+            },
+            onAwareUnavailable = {
+                Log.d("ControllerScreen", "onAwareUnavailable")
+            },
+        )
+        wifiAwareManager.initialize()
     }
     DisposableEffect(Unit) {
         onDispose {
