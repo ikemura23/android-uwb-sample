@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -33,11 +34,11 @@ fun ControllerScreen(modifier: Modifier = Modifier) {
     val viewModel: ControllerViewModel = viewModel()
 
     LaunchedEffect(Unit) {
+        viewModel.initializeWifiAware(context)
         uwbController.startRanging()
         uwbController.rangingPosition.collect { position ->
             uwbPosition.value = position
         }
-        viewModel.initializeWifiAware(context)
     }
     DisposableEffect(Unit) {
         onDispose {
