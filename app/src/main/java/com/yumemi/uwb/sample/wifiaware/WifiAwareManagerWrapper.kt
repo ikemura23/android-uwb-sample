@@ -189,6 +189,18 @@ class WifiAwareManagerWrapper(
         return fineLocation == PackageManager.PERMISSION_GRANTED || nearby == PackageManager.PERMISSION_GRANTED
     }
 
+    fun close() {
+        publishSession?.close()
+        subscribeSession?.close()
+        wifiAwareSession?.close()
+        wifiAwareManager = null
+        publishSession = null
+        subscribeSession = null
+        wifiAwareSession = null
+        connectedPeers_pub.clear()
+        connectedPeers_sub.clear()
+    }
+
     companion object {
         private const val TAG = "WifiAwareWrapper"
         private const val SERVICE_NAME = "wifi_aware_demo"

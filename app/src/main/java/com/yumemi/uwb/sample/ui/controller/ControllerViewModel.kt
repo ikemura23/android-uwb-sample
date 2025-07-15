@@ -54,6 +54,11 @@ class ControllerViewModel : ViewModel() {
         }
     }
 
+    fun cancelWifiAware() {
+        isAutoSendingEnabled = false
+        handler.removeCallbacks(sendMessageRunnable)
+    }
+
     companion object {
         private const val TAG = "ControllerViewModel"
     }

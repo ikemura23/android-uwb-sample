@@ -70,6 +70,10 @@ class ResponderViewModel(private val uwbResponder: UwbResponder) : ViewModel() {
         uwbResponder.cancelRanging()
     }
 
+    fun closeWifiAware() {
+        wifiAwareManager.close()
+    }
+
     companion object {
         private const val TAG = "ResponderViewModel"
     }

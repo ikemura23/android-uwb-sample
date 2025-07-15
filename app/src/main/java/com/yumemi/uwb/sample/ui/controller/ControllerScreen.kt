@@ -43,6 +43,7 @@ fun ControllerScreen(modifier: Modifier = Modifier) {
     DisposableEffect(Unit) {
         onDispose {
             uwbController.cancelRanging()
+            viewModel.cancelWifiAware()
         }
     }
     Scaffold(
